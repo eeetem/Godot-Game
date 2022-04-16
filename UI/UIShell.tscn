@@ -1,0 +1,50 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://shell.png" type="Texture" id=1]
+[ext_resource path="res://Shaders/GlobalPostProcess.tres" type="Shader" id=2]
+
+[sub_resource type="ShaderMaterial" id=1]
+shader = ExtResource( 2 )
+shader_param/magnitude = 20.0
+shader_param/healthmag = 100.0
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends TextureRect
+
+
+# Declare member variables here. Examples:
+# var a = 2
+# var b = \"text\"
+var c : Curve = preload(\"res://curve.tres\");
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	material.set_shader_param(\"healthmag\",c.interpolate(1 - Player.health/100.0))
+"
+
+[node name="Control" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect" type="TextureRect" parent="."]
+modulate = Color( 0.0392157, 0, 0, 1 )
+material = SubResource( 1 )
+margin_left = -106.0
+margin_top = -74.0
+margin_right = 107.0
+margin_bottom = 46.0
+texture = ExtResource( 1 )
+expand = true
+stretch_mode = 6
+script = SubResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

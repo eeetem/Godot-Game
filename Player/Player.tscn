@@ -1,0 +1,220 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Player/fashlight.png" type="Texture" id=1]
+[ext_resource path="res://Sounds/gun.wav" type="AudioStream" id=2]
+[ext_resource path="res://Player/light.png" type="Texture" id=3]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends KinematicBody2D
+
+export var MaxSpeed  : float = 90 # How fast the player will move (pixels/sec).
+var CurrentSpeed  : float = 0;
+var acceleration  : float = 2;
+var deceleration  : float = 10;
+var accelerationCounter : float = 0;
+
+var lastDir : Vector2
+
+var LookCounter : float = 0;
+
+var shotCooldown = 0;
+
+
+var magazine = 1;
+var looseAmmo = 6;
+var health : float = 100;
+
+var blood = preload(\"res://Enemy/Blood.tscn\")
+var GunSound : AudioStreamPlayer2D;
+var shot = preload(\"res://Sounds/gun.wav\")
+var reload = preload(\"res://Sounds/reload.wav\")
+var pump = preload(\"res://Sounds/pump.wav\")
+
+
+var bullet = preload(\"res://Player/Bullet.tscn\")
+var shell = preload(\"res://Player/Shell.tscn\")
+
+
+var Velocity : Vector2 = Vector2(0,0)
+
+var GunLight : Light2D;
+
+var dead = false;
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	GunSound = get_node(\"GunSound\");
+	GunLight = get_node(\"GunshotLight\");
+	yield(get_tree(), \"idle_frame\")
+	var tree = get_tree().root
+	get_parent().remove_child(self)
+	tree.get_node(\"Control/ViewportContainer/Viewport/World\").add_child(self)
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	ProcessWeapon(delta);
+
+func _physics_process(delta):
+	ProcessMovement(delta);
+
+
+
+func ProcessMovement(delta) -> void:
+	if dead : return;
+	var dir := Vector2.ZERO # The player's movement vector.dwssssssssssssssssssssssssssadwasd
+	if Input.is_action_pressed(\"ui_right\"):
+		dir.x += 1
+	if Input.is_action_pressed(\"ui_left\"):
+		dir.x -= 1
+	if Input.is_action_pressed(\"ui_down\"):
+		dir.y += 1
+	if Input.is_action_pressed(\"ui_up\"):
+		dir.y -= 1
+		
+	if Input.is_action_pressed(\"sprint\"):
+		MaxSpeed = 1000;
+	else:
+		MaxSpeed =200;
+	
+	if dir.length() > 0 and accelerationCounter <= 1:
+		accelerationCounter += acceleration * delta;
+		if accelerationCounter > 1:
+			accelerationCounter = 1;
+	elif accelerationCounter > 0:
+		dir = lastDir;#since we're not inputing a direction ndsow use last direction
+		accelerationCounter -= deceleration * delta;
+		
+		
+	CurrentSpeed = lerp(0,MaxSpeed,accelerationCounter)
+		
+	
+
+	dir = dir.clamped(1);
+	
+	if(dir != lastDir):
+		accelerationCounter /= 2;#repeat the rotate animation
+	
+	Velocity += dir * acceleration
+	
+	Velocity = Velocity.clamped(MaxSpeed);
+	
+	move_and_slide(Velocity);
+
+		
+	
+	lastDir = dir;
+
+	var m = get_global_mouse_position()
+	if abs(self.get_angle_to(m)) > 0.1:
+		if self.get_angle_to(m) > 0:
+			self.rotation += delta*4
+		else:
+			self.rotation -= delta*4
+	else:
+		look_at(get_global_mouse_position())
+
+func ProcessWeapon(delta) -> void:
+	if dead : return;
+	shotCooldown -= delta;
+	
+	if(GunLight.energy > 0):
+		GunLight.energy -= delta*5;
+		GunLight.texture_scale -= delta;
+		
+	if(shotCooldown< 0.5 and shotCooldown+delta > 0.5 ):#just passed 0 so cock it;
+		GunSound.pitch_scale = rand_range(0.95, 1.05);
+		GunSound.stream = pump;
+		GunSound.play();
+	
+	if(shotCooldown>0): return
+	
+
+		
+	if Input.is_action_pressed(\"shoot\") and magazine > 0 :
+		GunSound.pitch_scale = rand_range(0.9, 1.1);
+		GunSound.stream = shot;
+		GunSound.play();
+		shotCooldown = 1.5;
+		for n in 8:
+			var instance = bullet.instance();
+			instance.position = self.position
+			instance.rotation = self.rotation;
+			get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(instance);
+		var instance = shell.instance();
+		instance.position = self.position
+		instance.rotation = self.rotation;
+		get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(instance);
+		GunLight.energy = 2;
+		GunLight.texture_scale = 1;
+		magazine -= 1;
+	
+		
+		
+	if Input.is_action_pressed(\"reload\") and magazine < 6 and looseAmmo >0:
+		magazine +=1;
+		looseAmmo -=1;
+		shotCooldown = 1;
+		GunSound.pitch_scale = rand_range(0.9, 1.1);
+		GunSound.stream = reload;
+		GunSound.play();
+	
+func TakeDamage(var ammount):
+	
+	health -= ammount;
+	for n in ammount/10:
+		var instance = blood.instance();
+		instance.position = self.position
+		instance.rotation = self.rotation;
+		get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(instance);
+
+	
+	
+	
+	if(health<0):
+		for n in 4:
+			var instance = blood.instance();
+			instance.position = self.position
+			instance.rotation = self.rotation;
+			get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(instance);
+		dead = true;
+
+	
+"
+
+[sub_resource type="CircleShape2D" id=2]
+
+[node name="Player" type="KinematicBody2D"]
+collision_layer = 4
+collision_mask = 7
+script = SubResource( 1 )
+
+[node name="Camera2D" type="Camera2D" parent="."]
+current = true
+zoom = Vector2( 0.5, 0.5 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 2 )
+
+[node name="Flashlight" type="Light2D" parent="."]
+position = Vector2( 0, -1 )
+scale = Vector2( 0.796187, 1.04054 )
+texture = ExtResource( 1 )
+offset = Vector2( 330, 0 )
+texture_scale = 0.7
+energy = 2.5
+shadow_enabled = true
+
+[node name="GunSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource( 2 )
+volume_db = 10.0
+
+[node name="GunshotLight" type="Light2D" parent="."]
+position = Vector2( 0, -1 )
+texture = ExtResource( 3 )
+color = Color( 0.870588, 0.631373, 0.0352941, 1 )
+energy = 10.0
+shadow_enabled = true
+__meta__ = {
+"_edit_lock_": true
+}

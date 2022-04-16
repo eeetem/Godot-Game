@@ -1,0 +1,65 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://Shaders/TracerShader.tres" type="Shader" id=1]
+[ext_resource path="res://caster.png" type="Texture" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends KinematicBody2D
+
+
+var line : Line2D;
+
+func _ready():
+	randomize()
+	line = get_node(\"Path\")
+	remove_child(line)
+	get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(line)
+	line.add_point(global_position)
+	rotate(deg2rad(rand_range(-5.0, 5.0)))
+	var collision = move_and_collide(Vector2(800, 0).rotated(self.rotation),false)
+	line.add_point(global_position)
+	if collision!= null and collision.collider.has_method(\"GetHit\"):
+		collision.collider.GetHit()
+	fadespeed = rand_range(0.9, 1.1);
+
+var counter = 1.0;
+var fadespeed;
+func _process(delta):
+	counter -= delta*fadespeed;
+	line.material.set(\"shader_param/value\",counter)
+	
+	
+	if(counter < 0):
+		line.queue_free()
+		queue_free()
+	
+"
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 1, 1 )
+
+[sub_resource type="ShaderMaterial" id=4]
+shader = ExtResource( 1 )
+shader_param/magnitude = 100.0
+shader_param/value = 0.149
+
+[sub_resource type="Curve" id=3]
+_data = [ Vector2( 0, 0 ), 0.0, 1.0, 0, 1, Vector2( 1, 1 ), 1.0, 0.0, 1, 0 ]
+
+[node name="Bullet" type="KinematicBody2D"]
+collision_layer = 8
+collision_mask = 3
+script = SubResource( 1 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 2 )
+
+[node name="Path" type="Line2D" parent="."]
+material = SubResource( 4 )
+width = 3.0
+width_curve = SubResource( 3 )
+default_color = Color( 1, 0.937255, 0, 1 )
+texture = ExtResource( 2 )
+texture_mode = 1
+begin_cap_mode = 1
+end_cap_mode = 1

@@ -1,0 +1,22 @@
+[gd_resource type="Shader" format=2]
+
+[resource]
+code = "shader_type canvas_item;
+uniform float magnitude = 500f;
+uniform float healthmag = 100f;
+
+float random (vec2 st) {
+    return fract(sin(dot(st.xy,vec2(12.9898,78.233)))*43758.5453123);
+}
+
+void fragment(){
+	vec2 newUV = vec2(floor(UV.x*magnitude)/magnitude,floor(UV.y*magnitude)/magnitude);
+	COLOR = texture(TEXTURE, newUV);
+	float offset = random(vec2(TIME,UV.x+UV.y));
+	COLOR.a += offset/10f;
+	
+	COLOR.r += 0.0001f * healthmag;
+	COLOR.r *= 1f+ (healthmag/20f)*abs(random(UV+TIME*10f));
+	
+}
+"

@@ -1,0 +1,107 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://Shaders/GlobalPostProcess.tres" type="Shader" id=1]
+[ext_resource path="res://UI/screen.png" type="Texture" id=2]
+[ext_resource path="res://World.tscn" type="PackedScene" id=3]
+
+[sub_resource type="ShaderMaterial" id=4]
+shader = ExtResource( 1 )
+shader_param/magnitude = 650.0
+shader_param/healthmag = 0.0
+
+[sub_resource type="GDScript" id=5]
+script/source = "extends ViewportContainer
+
+
+# Declare member variables here. Examples:
+# var a = 2
+# var b = \"text\"
+var c : Curve = preload(\"res://curve.tres\");
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+
+func _process(delta):
+	self.material.set_shader_param(\"healthmag\",c.interpolate(1 - Player.health/100))
+	
+"
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends Node
+
+
+# Declare member variables here. Examples:
+# var a = 2
+# var b = \"text\"
+var oldAmmo;
+var UIItems = []
+var c : Curve = preload(\"res://curve.tres\");
+
+var uiBullet = preload(\"res://UI/UIShell.tscn\")
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+
+func _process(delta):
+	get_child(0).material.set_shader_param(\"healthmag\",c.interpolate(1 - Player.health/100.0))
+	if oldAmmo == Player.looseAmmo:
+		return
+	oldAmmo = Player.looseAmmo;
+	for uitem in UIItems:
+		uitem.queue_free();
+		
+	UIItems.clear();
+	for n in Player.looseAmmo:
+		var instance : Control = uiBullet.instance();
+		get_node(\"Bar\").add_child(instance);
+		instance.rect_position = Vector2(n*50+50,1000)
+		UIItems.append(instance);
+"
+
+[sub_resource type="ShaderMaterial" id=3]
+shader = ExtResource( 1 )
+shader_param/magnitude = 30000.0
+shader_param/healthmag = 100.0
+
+[node name="Control" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ViewportContainer" type="ViewportContainer" parent="."]
+material = SubResource( 4 )
+margin_right = 1920.0
+margin_bottom = 1077.0
+stretch = true
+script = SubResource( 5 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Viewport" type="Viewport" parent="ViewportContainer"]
+size = Vector2( 1920, 1077 )
+handle_input_locally = false
+render_target_update_mode = 3
+audio_listener_enable_2d = true
+
+[node name="World" parent="ViewportContainer/Viewport" instance=ExtResource( 3 )]
+
+[node name="UI" type="Node" parent="ViewportContainer"]
+script = SubResource( 2 )
+
+[node name="Bar" type="TextureRect" parent="ViewportContainer/UI"]
+material = SubResource( 3 )
+margin_right = 1919.0
+margin_bottom = 1079.0
+texture = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

@@ -1,0 +1,80 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://Shaders/LightingShader.tres" type="Shader" id=2]
+[ext_resource path="res://Enemy/Enemy.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Wall.tscn" type="PackedScene" id=4]
+[ext_resource path="res://Ammo.tscn" type="PackedScene" id=5]
+
+[sub_resource type="ShaderMaterial" id=1]
+shader = ExtResource( 2 )
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = ExtResource( 2 )
+
+[node name="World" type="Node"]
+
+[node name="ColorRect" type="ColorRect" parent="."]
+material = SubResource( 1 )
+margin_left = -6471.0
+margin_top = -4105.0
+margin_right = 7536.0
+margin_bottom = 4818.0
+color = Color( 0.113725, 0.113725, 0.113725, 1 )
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+visible = false
+color = Color( 0, 0, 0, 1 )
+
+[node name="Area2D" parent="." instance=ExtResource( 3 )]
+position = Vector2( 417, -53 )
+
+[node name="Area2D2" parent="." instance=ExtResource( 3 )]
+position = Vector2( 893, 210 )
+
+[node name="Enemy2" parent="." instance=ExtResource( 3 )]
+position = Vector2( 722, -1196 )
+
+[node name="Enemy" parent="." instance=ExtResource( 3 )]
+position = Vector2( 697, -198 )
+
+[node name="ColorRect2" type="ColorRect" parent="."]
+material = SubResource( 2 )
+margin_left = 353.0
+margin_top = 57.0
+margin_right = 379.0
+margin_bottom = 72.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="WALL5" parent="." instance=ExtResource( 4 )]
+position = Vector2( 909, -1930 )
+rotation = 1.27602e-06
+scale = Vector2( 1, 39.6648 )
+
+[node name="WALL4" parent="." instance=ExtResource( 4 )]
+position = Vector2( 768, -386 )
+rotation = 1.74846e-07
+scale = Vector2( 1, 6.298 )
+
+[node name="WALL2" parent="." instance=ExtResource( 4 )]
+position = Vector2( -29, -15 )
+rotation = -3.14159
+
+[node name="WALL3" parent="." instance=ExtResource( 4 )]
+position = Vector2( -61, -94 )
+rotation = 1.5708
+scale = Vector2( 1, 10 )
+
+[node name="WALL" parent="." instance=ExtResource( 4 )]
+position = Vector2( -374, 44 )
+rotation = 1.5708
+scale = Vector2( 1, 10 )
+
+[node name="Node2D" parent="." instance=ExtResource( 5 )]
+position = Vector2( 645, -9 )
