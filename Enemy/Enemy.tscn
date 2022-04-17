@@ -1,7 +1,9 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://Shaders/EnemyLighitng.tres" type="Shader" id=1]
 [ext_resource path="res://Enemy/full.png" type="Texture" id=2]
+[ext_resource path="res://Player/light.png" type="Texture" id=3]
+[ext_resource path="res://Enemy/enemy.wav" type="AudioStream" id=4]
 
 [sub_resource type="GDScript" id=4]
 script/source = "extends RigidBody2D
@@ -11,14 +13,19 @@ script/source = "extends RigidBody2D
 # var a = 2
 # var b = \"text\"
 var blood = preload(\"res://Enemy/Blood.tscn\")
+var c : Curve = preload(\"res://enemyLightCurve.tres\");
 
 var PlayerPos : Vector2;
 var playerInsight = false;
 
+var light :Light2D;
+var noise :AudioStreamPlayer2D;
 
 
 func _ready():
 	PlayerPos = self.position;
+	light = get_node(\"Light2D\");
+	noise = get_node(\"noise\");
 
 
 
@@ -26,7 +33,7 @@ func _ready():
 #func _process(delta):
 #	pass
 func GetHit():
-	for n in 4:
+	for n in 3:
 		var instance = blood.instance();
 		instance.position = self.position
 		instance.rotation = self.rotation;
@@ -39,7 +46,7 @@ func GetHit():
 func _physics_process(delta):
 	if (Player.dead):return;
 	playerInsight = false;
-	
+
 	var space_state = get_world_2d().direct_space_state
 	# use global coordinates, not local to node
 	var result = space_state.intersect_ray(self.position, Player.position)
@@ -47,9 +54,16 @@ func _physics_process(delta):
 		PlayerPos = result.collider.position;
 		playerInsight = true;
 	
+	if(playerInsight):
+		light.energy = c.interpolate((300 - Player.position.distance_to(self.position))/300);
+		noise.pitch_scale = clamp((300 - Player.position.distance_to(self.position))/250,1,5);
+	else:
+		light.energy = clamp((light.energy-0.1*delta),0,1);
+	
+	
+	noise.pitch_scale += rand_range(-0.5,0.5)
 	
 
-	
 	#if !(velocity.length() > maxSpeed) :
 	#	var target = (PlayerPos - position).normalized();
 	#	if(playerInsight):
@@ -59,15 +73,19 @@ func _physics_process(delta):
 			
 	#move_and_slide(velocity);
 	
-	apply_central_impulse((PlayerPos - position).normalized()*10)
+	apply_central_impulse((PlayerPos - position).normalized()*3)
+	if Player.position.distance_to(self.position) > 145 and Player.position.distance_to(self.position) < 500:
+		apply_central_impulse((PlayerPos - position).normalized()*Player.position.distance_to(self.position)/60)
 
 
 
 
 func _on_Enemy_body_entered(body):
+	light.energy += 0.5;
 	if body.name == \"Player\":
 		body.TakeDamage(15);
-		apply_central_impulse((position-PlayerPos).normalized()*150)
+		apply_central_impulse((position-PlayerPos).normalized()*200)
+		Player.Velocity += (PlayerPos - position).normalized()*10
 	
 "
 
@@ -87,7 +105,7 @@ collision_mask = 15
 gravity_scale = 0.0
 contacts_reported = 999
 contact_monitor = true
-linear_damp = 1.0
+linear_damp = 0.2
 angular_damp = 1.0
 script = SubResource( 4 )
 
@@ -100,5 +118,21 @@ texture = ExtResource( 2 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 3 )
+
+[node name="Light2D" type="Light2D" parent="."]
+position = Vector2( 0, 2 )
+scale = Vector2( 0.147461, 0.147461 )
+texture = ExtResource( 3 )
+color = Color( 0.415686, 0, 0, 1 )
+energy = 0.1
+shadow_enabled = true
+
+[node name="noise" type="AudioStreamPlayer2D" parent="."]
+position = Vector2( 2, 2 )
+stream = ExtResource( 4 )
+volume_db = 24.0
+autoplay = true
+max_distance = 500.0
+attenuation = 6.72716
 
 [connection signal="body_entered" from="." to="." method="_on_Enemy_body_entered"]

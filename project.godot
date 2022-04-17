@@ -24,6 +24,10 @@ window/size/width=1920
 window/size/height=1080
 window/size/resizable=false
 
+[global]
+
+bus=false
+
 [input]
 
 ui_left={

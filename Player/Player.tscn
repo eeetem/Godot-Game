@@ -7,11 +7,12 @@
 [sub_resource type="GDScript" id=1]
 script/source = "extends KinematicBody2D
 
-export var MaxSpeed  : float = 90 # How fast the player will move (pixels/sec).
-var CurrentSpeed  : float = 0;
-var acceleration  : float = 2;
-var deceleration  : float = 10;
-var accelerationCounter : float = 0;
+var RunSpeed  : float = 180 # How fast the player will move (pixels/sec).
+var RunAcc  : float = 4;
+
+var walkSpeed  : float = 90 # How fast the player will move (pixels/sec).
+var WalkAcc  : float = 10;
+
 
 var lastDir : Vector2
 
@@ -20,8 +21,8 @@ var LookCounter : float = 0;
 var shotCooldown = 0;
 
 
-var magazine = 1;
-var looseAmmo = 6;
+var magazine = 0;
+var looseAmmo = 0;
 var health : float = 100;
 
 var blood = preload(\"res://Enemy/Blood.tscn\")
@@ -72,47 +73,48 @@ func ProcessMovement(delta) -> void:
 	if Input.is_action_pressed(\"ui_up\"):
 		dir.y -= 1
 		
-	if Input.is_action_pressed(\"sprint\"):
-		MaxSpeed = 1000;
+	var MaxSpeed;
+	var acceleration;
+	var rotationTarget = get_global_mouse_position()
+	var rotationSpeed =6;
+	if Input.is_action_pressed(\"sprint\") or  Velocity.length() > walkSpeed+5:#you can't use walk to insantly slow down
+		acceleration = RunAcc
+		MaxSpeed = RunSpeed;
+		rotationSpeed =2;
 	else:
-		MaxSpeed =200;
-	
-	if dir.length() > 0 and accelerationCounter <= 1:
-		accelerationCounter += acceleration * delta;
-		if accelerationCounter > 1:
-			accelerationCounter = 1;
-	elif accelerationCounter > 0:
-		dir = lastDir;#since we're not inputing a direction ndsow use last direction
-		accelerationCounter -= deceleration * delta;
+		acceleration = WalkAcc;
+		MaxSpeed = walkSpeed;
+		
+	if Input.is_action_pressed(\"sprint\"):
+		rotationTarget = get_global_mouse_position().linear_interpolate(self.position +Velocity,Velocity.length()/(RunSpeed+10));
 		
 		
-	CurrentSpeed = lerp(0,MaxSpeed,accelerationCounter)
-		
+
+	if abs(self.get_angle_to(rotationTarget)) > 0.1:
+		if self.get_angle_to(rotationTarget) > 0:
+			self.rotation += delta*rotationSpeed
+		else:
+			self.rotation -= delta*rotationSpeed
+	else:
+		look_at(rotationTarget)
 	
 
 	dir = dir.clamped(1);
+	if dir.length() == 0:
+		dir = Velocity.direction_to(Vector2(0,0)).normalized();
 	
-	if(dir != lastDir):
-		accelerationCounter /= 2;#repeat the rotate animation
-	
-	Velocity += dir * acceleration
-	
-	Velocity = Velocity.clamped(MaxSpeed);
-	
-	move_and_slide(Velocity);
 
+
+	Velocity += dir * acceleration
 		
+
+	Velocity = move_and_slide(Velocity);
+
+	Velocity = Velocity.clamped(MaxSpeed);
 	
 	lastDir = dir;
 
-	var m = get_global_mouse_position()
-	if abs(self.get_angle_to(m)) > 0.1:
-		if self.get_angle_to(m) > 0:
-			self.rotation += delta*4
-		else:
-			self.rotation -= delta*4
-	else:
-		look_at(get_global_mouse_position())
+	
 
 func ProcessWeapon(delta) -> void:
 	if dead : return;

@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://Shaders/GlobalPostProcess.tres" type="Shader" id=1]
 [ext_resource path="res://UI/screen.png" type="Texture" id=2]
 [ext_resource path="res://World.tscn" type="PackedScene" id=3]
+[ext_resource path="res://UI/ambiance.wav" type="AudioStream" id=4]
 
 [sub_resource type="ShaderMaterial" id=4]
 shader = ExtResource( 1 )
@@ -16,7 +17,7 @@ script/source = "extends ViewportContainer
 # Declare member variables here. Examples:
 # var a = 2
 # var b = \"text\"
-var c : Curve = preload(\"res://curve.tres\");
+var c : Curve = preload(\"res://HealthRedCurve.tres\");
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -38,7 +39,7 @@ script/source = "extends Node
 # var b = \"text\"
 var oldAmmo;
 var UIItems = []
-var c : Curve = preload(\"res://curve.tres\");
+var c : Curve = preload(\"res://HealthRedCurve.tres\");
 
 var uiBullet = preload(\"res://UI/UIShell.tscn\")
 
@@ -105,3 +106,8 @@ texture = ExtResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 4 )
+volume_db = -20.0
+autoplay = true
