@@ -1,0 +1,66 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Player/light.png" type="Texture" id=1]
+[ext_resource path="res://Enviroment/lamp.png" type="Texture" id=2]
+[ext_resource path="res://Shaders/GlowLightingShader.tres" type="Shader" id=3]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+
+# Declare member variables here. Examples:
+# var a = 2
+# var b = \"text\"
+var light;
+var nonflickertime :float = 0;
+var lightTarget = 0.2;
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	light = get_node(\"Light2D\");
+
+func _process(delta):
+	nonflickertime += delta;
+	if rand_range(0,2) < nonflickertime:
+		nonflickertime = 0;
+		lightTarget += rand_range(-0.1,0.1);
+		if lightTarget < 1:
+			lightTarget +=0.05;
+		if lightTarget > 1.4:
+			lightTarget -=0.05;
+			
+	if(lightTarget > light.energy):
+		light.energy += delta;
+	else:
+		light.energy -= delta;
+		
+func _physics_process(delta):
+	var space_state = get_world_2d().direct_space_state
+	# use global coordinates, not local to node
+	var result = space_state.intersect_ray(self.position, Player.position)
+	if result and result.collider.name == \"Player\" and (result.collider.position.distance_to(self.position) < 250):
+		Player.Lit = true;
+"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = ExtResource( 3 )
+shader_param/bloomRadius = 200.0
+shader_param/bloomThreshold = 0.6
+shader_param/bloomIntensity = 8.0
+
+[node name="lamp" type="Node2D"]
+script = SubResource( 1 )
+
+[node name="Light2D" type="Light2D" parent="."]
+process_priority = 2
+texture = ExtResource( 1 )
+texture_scale = 0.8
+color = Color( 1, 0.796078, 0.215686, 1 )
+energy = 1.2
+shadow_enabled = true
+shadow_item_cull_mask = 31
+
+[node name="Sprite" type="Sprite" parent="."]
+material = SubResource( 2 )
+scale = Vector2( 0.2, 0.2 )
+texture = ExtResource( 2 )
+offset = Vector2( 0, -160 )

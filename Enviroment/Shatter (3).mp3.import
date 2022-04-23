@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/Shatter (3).mp3-3f3a089d8b3f16e57862e144d7e35ee9.mp3str"
+
+[deps]
+
+source_file="res://Enviroment/Shatter (3).mp3"
+dest_files=[ "res://.import/Shatter (3).mp3-3f3a089d8b3f16e57862e144d7e35ee9.mp3str" ]
+
+[params]
+
+loop=false
+loop_offset=0

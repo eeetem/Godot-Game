@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://Player/fashlight.png" type="Texture" id=1]
 [ext_resource path="res://Sounds/gun.wav" type="AudioStream" id=2]
 [ext_resource path="res://Player/light.png" type="Texture" id=3]
+[ext_resource path="res://Player/los.png" type="Texture" id=4]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends KinematicBody2D
@@ -21,7 +22,7 @@ var LookCounter : float = 0;
 var shotCooldown = 0;
 
 
-var magazine = 0;
+var magazine = 3;
 var looseAmmo = 0;
 var health : float = 100;
 
@@ -40,7 +41,9 @@ var Velocity : Vector2 = Vector2(0,0)
 
 var GunLight : Light2D;
 
+var FlashOn = true;
 var dead = false;
+var Lit = false;
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -58,6 +61,7 @@ func _process(delta):
 
 func _physics_process(delta):
 	ProcessMovement(delta);
+	Lit = false;#player is updated first - then lights - then enemies
 
 
 
@@ -101,19 +105,14 @@ func ProcessMovement(delta) -> void:
 
 	dir = dir.clamped(1);
 	if dir.length() == 0:
-		dir = Velocity.direction_to(Vector2(0,0)).normalized();
-	
+		Velocity =  Velocity *0.95
 
-
-	Velocity += dir * acceleration
-		
+	else:
+		Velocity += dir * acceleration
+		lastDir = dir;
 
 	Velocity = move_and_slide(Velocity);
-
 	Velocity = Velocity.clamped(MaxSpeed);
-	
-	lastDir = dir;
-
 	
 
 func ProcessWeapon(delta) -> void:
@@ -138,7 +137,7 @@ func ProcessWeapon(delta) -> void:
 		GunSound.stream = shot;
 		GunSound.play();
 		shotCooldown = 1.5;
-		for n in 8:
+		for n in 5:
 			var instance = bullet.instance();
 			instance.position = self.position
 			instance.rotation = self.rotation;
@@ -160,6 +159,10 @@ func ProcessWeapon(delta) -> void:
 		GunSound.pitch_scale = rand_range(0.9, 1.1);
 		GunSound.stream = reload;
 		GunSound.play();
+	if Input.is_action_just_pressed(\"flashlight\"):
+		FlashOn = !FlashOn;
+		get_node(\"Flashlight\").enabled = FlashOn;
+	
 	
 func TakeDamage(var ammount):
 	
@@ -186,7 +189,11 @@ func TakeDamage(var ammount):
 
 [sub_resource type="CircleShape2D" id=2]
 
+[sub_resource type="OccluderPolygon2D" id=3]
+polygon = PoolVector2Array( -4, -1, -3, -3, -1, -4, 1, -4, 3, -3, 4, -1, 4, 1, 3, 3, 1, 4, -1, 4, -3, 3, -4, 1 )
+
 [node name="Player" type="KinematicBody2D"]
+process_priority = -1
 collision_layer = 4
 collision_mask = 7
 script = SubResource( 1 )
@@ -207,6 +214,12 @@ texture_scale = 0.7
 energy = 2.5
 shadow_enabled = true
 
+[node name="TinyLight" type="Light2D" parent="."]
+position = Vector2( -2.99999, -2.28882e-05 )
+scale = Vector2( 0.41748, 0.41748 )
+texture = ExtResource( 3 )
+shadow_enabled = true
+
 [node name="GunSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource( 2 )
 volume_db = 10.0
@@ -220,3 +233,21 @@ shadow_enabled = true
 __meta__ = {
 "_edit_lock_": true
 }
+
+[node name="LosReveal" type="Light2D" parent="."]
+light_mask = 2
+position = Vector2( -1, 1 )
+texture = ExtResource( 4 )
+color = Color( 0, 0, 0, 0 )
+energy = 0.0
+mode = 3
+range_item_cull_mask = 2
+shadow_enabled = true
+shadow_color = Color( 0, 0, 0, 1 )
+shadow_item_cull_mask = 3
+
+[node name="LightOccluder2D" type="LightOccluder2D" parent="."]
+light_mask = 4
+scale = Vector2( 2, 2 )
+occluder = SubResource( 3 )
+light_mask = 4
