@@ -18,9 +18,8 @@ func _ready():
 	pass # Replace with function body.
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-#func _process(delta):
-#	pass
+
+var reinforced = true
 func GetHit():
 	get_node(\"CollisionShape2D\").disabled = true; 
 	for n in 5:
@@ -33,6 +32,9 @@ func GetHit():
 
 [node name="RGlass" instance=ExtResource( 1 )]
 script = SubResource( 1 )
+
+[node name="CollisionShape2D" parent="." index="0"]
+position = Vector2( 0, -0.5 )
 
 [node name="Sprite" parent="." index="1"]
 texture = ExtResource( 2 )

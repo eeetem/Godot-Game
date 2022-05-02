@@ -46,9 +46,8 @@ func GetHit():
 	queue_free()
 
 func _physics_process(delta):
-	if (Player.dead):return;
+	if (!is_instance_valid(Player) or Player.dead):return;
 	playerInsight = false;
-	
 	if stun > 0 :
 		stun -= delta;
 		return;
@@ -75,7 +74,7 @@ func _physics_process(delta):
 	
 
 	#if !(velocity.length() > maxSpeed) :
-	#	var target = (PlayerPos - position).normalized();
+	#	var target = (PlayerPos - position).normalized();ddddw
 	#	if(playerInsight):
 	#		velocity += target;
 	#	else:
@@ -96,9 +95,9 @@ func _on_Enemy_body_entered(body):
 		Player.Velocity += (PlayerPos - position).normalized()*10
 		body.TakeDamage(15);
 		apply_central_impulse((position-PlayerPos).normalized()*200)
-	if body.name == \"Glass\":
+	if \"reinforced\" in body and !body.reinforced:
 		body.GetHit();
-		stun = 2;
+		stun = 5;
 "
 
 [sub_resource type="ShaderMaterial" id=1]

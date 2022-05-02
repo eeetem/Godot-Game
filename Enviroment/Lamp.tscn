@@ -34,11 +34,14 @@ func _process(delta):
 		light.energy -= delta;
 		
 func _physics_process(delta):
+	if(!is_instance_valid(Player)):
+		return
 	var space_state = get_world_2d().direct_space_state
 	# use global coordinates, not local to node
-	var result = space_state.intersect_ray(self.position, Player.position)
-	if result and result.collider.name == \"Player\" and (result.collider.position.distance_to(self.position) < 250):
+	var result = space_state.intersect_ray(self.position, Player.position,[],5)
+	if result and result.collider.name == \"Player\" and (result.collider.position.distance_to(self.position) < 260):
 		Player.Lit = true;
+		Player.LastLit = true;
 "
 
 [sub_resource type="ShaderMaterial" id=2]

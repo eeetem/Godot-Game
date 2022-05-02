@@ -11,8 +11,8 @@ script/source = "extends KinematicBody2D
 var RunSpeed  : float = 180 # How fast the player will move (pixels/sec).
 var RunAcc  : float = 4;
 
-var walkSpeed  : float = 90 # How fast the player will move (pixels/sec).
-var WalkAcc  : float = 10;
+var walkSpeed  : float = 200 # How fast the player will move (pixels/sec).
+var WalkAcc  : float = 20;
 
 
 var lastDir : Vector2
@@ -22,7 +22,7 @@ var LookCounter : float = 0;
 var shotCooldown = 0;
 
 
-var magazine = 3;
+var magazine = 10;
 var looseAmmo = 0;
 var health : float = 100;
 
@@ -43,6 +43,7 @@ var GunLight : Light2D;
 
 var FlashOn = true;
 var dead = false;
+var LastLit=false
 var Lit = false;
 
 # Called when the node enters the scene tree for the first time.
@@ -53,7 +54,14 @@ func _ready():
 	var tree = get_tree().root
 	get_parent().remove_child(self)
 	tree.get_node(\"Control/ViewportContainer/Viewport/World\").add_child(self)
+	ResetAndRespawn();
 
+func ResetAndRespawn():
+	magazine =0;
+	dead = false;
+	health = 100;
+	looseAmmo = 0;
+	position = Vector2(0,0);
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -61,8 +69,10 @@ func _process(delta):
 
 func _physics_process(delta):
 	ProcessMovement(delta);
-	Lit = false;#player is updated first - then lights - then enemies
-
+	if LastLit:
+		LastLit = false;
+	elif Lit:
+		Lit = false;
 
 
 func ProcessMovement(delta) -> void:
@@ -165,6 +175,8 @@ func ProcessWeapon(delta) -> void:
 	
 	
 func TakeDamage(var ammount):
+	if(Player.dead):
+		return;
 	
 	health -= ammount;
 	for n in ammount/10:
@@ -218,6 +230,7 @@ shadow_enabled = true
 position = Vector2( -2.99999, -2.28882e-05 )
 scale = Vector2( 0.41748, 0.41748 )
 texture = ExtResource( 3 )
+energy = 0.9
 shadow_enabled = true
 
 [node name="GunSound" type="AudioStreamPlayer2D" parent="."]

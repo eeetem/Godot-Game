@@ -1,0 +1,72 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Enviroment/Buttons/press.ogg" type="AudioStream" id=1]
+[ext_resource path="res://Shaders/LightingShader.tres" type="Shader" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends button
+
+
+
+#var toggle = false;
+export var DoorID = -2;
+var doors = [];
+var sfx;
+func _ready():
+	sfx = get_node(\"presssfx\");
+	var dss = get_tree().get_nodes_in_group(\"doors\")
+	for d in dss:
+		if d.ID == DoorID:
+			doors.append(d);
+			
+	
+	#toggle = door.InitialOpen;
+
+var toggle = true;
+
+func _pressed():
+
+	sfx.pitch_scale = rand_range(0.9, 1.1);
+	sfx.play();
+	toggle=!toggle;
+	for door in doors:	
+		door.SetOpen(!door.IsOpen);
+	if(toggle):
+		get_node(\"press\").color = Color.greenyellow;
+	else:
+		get_node(\"press\").color = Color.red;
+
+"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = ExtResource( 2 )
+
+[sub_resource type="ShaderMaterial" id=3]
+shader = ExtResource( 2 )
+
+[node name="button" type="Node2D"]
+scale = Vector2( 3, 3 )
+script = SubResource( 1 )
+
+[node name="press" type="ColorRect" parent="."]
+material = SubResource( 2 )
+margin_left = -2.0
+margin_top = -2.0
+margin_bottom = 2.0
+color = Color( 0.192157, 0.501961, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect2" type="ColorRect" parent="."]
+material = SubResource( 3 )
+margin_left = -1.0
+margin_top = -3.0
+margin_bottom = 3.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="presssfx" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource( 1 )

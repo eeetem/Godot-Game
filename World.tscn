@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=2]
+[gd_scene load_steps=21 format=2]
 
 [ext_resource path="res://Enviroment/Controlls.png" type="Texture" id=1]
 [ext_resource path="res://Shaders/LightingShader.tres" type="Shader" id=2]
@@ -13,6 +13,9 @@
 [ext_resource path="res://Enviroment/Glass.tscn" type="PackedScene" id=11]
 [ext_resource path="res://Enviroment/f.png" type="Texture" id=12]
 [ext_resource path="res://Enviroment/warning!.png" type="Texture" id=13]
+[ext_resource path="res://Enviroment/Door.tscn" type="PackedScene" id=14]
+[ext_resource path="res://Enviroment/Buttons/ToggleButton.tscn" type="PackedScene" id=15]
+[ext_resource path="res://Enviroment/RGlass.tscn" type="PackedScene" id=16]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 2 )
@@ -20,7 +23,10 @@ shader = ExtResource( 2 )
 [sub_resource type="ShaderMaterial" id=3]
 shader = ExtResource( 2 )
 
-[sub_resource type="ShaderMaterial" id=2]
+[sub_resource type="ShaderMaterial" id=5]
+shader = ExtResource( 2 )
+
+[sub_resource type="ShaderMaterial" id=4]
 shader = ExtResource( 2 )
 
 [node name="World" type="Node"]
@@ -60,8 +66,12 @@ position = Vector2( 94.131, -704 )
 [node name="Area2D2" parent="." instance=ExtResource( 3 )]
 position = Vector2( 424.131, 610 )
 
+[node name="Area2D5" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2449, 597 )
+
 [node name="Area2D4" parent="." instance=ExtResource( 3 )]
 position = Vector2( 1304.13, 414 )
+scale = Vector2( 1.00137, 1 )
 
 [node name="Area2D3" parent="." instance=ExtResource( 3 )]
 position = Vector2( 1465.13, 682 )
@@ -70,19 +80,32 @@ position = Vector2( 1465.13, 682 )
 position = Vector2( 1776.13, -1192 )
 
 [node name="WALL5" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1858.13, -700 )
+position = Vector2( 1857, -645 )
 rotation = 1.27602e-06
-scale = Vector2( 1, 2.5 )
+scale = Vector2( 1, 1.5 )
+
+[node name="WALL21" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2540, -504 )
+rotation = 1.27602e-06
+scale = Vector2( 1, 4 )
 
 [node name="WALL34" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1857.13, -273 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 2.5 )
 
-[node name="WALL38" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2066.13, -478 )
+[node name="WALL91" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1718, -159 )
 rotation = 1.27602e-06
-scale = Vector2( 1, 2.5 )
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL38" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2066, -480 )
+rotation = 1.27602e-06
+
+[node name="WALL96" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2276, -473 )
+rotation = 1.27602e-06
 
 [node name="WALL6" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1370.13, 106 )
@@ -106,6 +129,11 @@ scale = Vector2( 1, 2 )
 
 [node name="WALL31" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1248.13, -852 )
+rotation = 1.27602e-06
+scale = Vector2( 1, 2 )
+
+[node name="WALL100" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2259, -873 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 2 )
 
@@ -156,6 +184,26 @@ rotation = 1.5708
 position = Vector2( 774, -376 )
 rotation = 1.5708
 
+[node name="Enemy17" parent="." instance=ExtResource( 3 )]
+position = Vector2( 1421, 262 )
+rotation = 1.5708
+
+[node name="Enemy16" parent="." instance=ExtResource( 3 )]
+position = Vector2( 1419, 114 )
+rotation = 1.5708
+
+[node name="Enemy18" parent="." instance=ExtResource( 3 )]
+position = Vector2( 1593, 403 )
+rotation = 1.5708
+
+[node name="Enemy20" parent="." instance=ExtResource( 3 )]
+position = Vector2( 1425, 1070 )
+rotation = 1.5708
+
+[node name="Enemy21" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2145, 1062 )
+rotation = 1.5708
+
 [node name="WALL92" parent="." instance=ExtResource( 4 )]
 position = Vector2( 779, -433 )
 rotation = 1.5708
@@ -179,7 +227,11 @@ rotation = 1.5708
 scale = Vector2( 1, 2 )
 
 [node name="WALL58" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1941.13, 712 )
+position = Vector2( 1944, 641 )
+rotation = 1.5708
+
+[node name="WALL118" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1691, 1123 )
 rotation = 1.5708
 
 [node name="WALL68" parent="." instance=ExtResource( 4 )]
@@ -222,7 +274,7 @@ position = Vector2( 2608.13, 441 )
 rotation = 1.5708
 
 [node name="WALL74" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2535.13, 761 )
+position = Vector2( 2535, 762 )
 rotation = 1.5708
 
 [node name="WALL76" parent="." instance=ExtResource( 4 )]
@@ -240,6 +292,9 @@ scale = Vector2( 1, 2 )
 [node name="WALL40" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1590.13, 510 )
 
+[node name="WALL105" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1508, 405 )
+
 [node name="WALL43" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1328.13, 511 )
 
@@ -247,8 +302,20 @@ position = Vector2( 1328.13, 511 )
 position = Vector2( 375.131, 618 )
 
 [node name="WALL48" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1507.13, 776 )
-scale = Vector2( 1, 2 )
+position = Vector2( 1572, 717 )
+
+[node name="WALL116" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1645, 931 )
+
+[node name="WALL129" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1499, 1187 )
+
+[node name="WALL131" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2057, 1169 )
+
+[node name="WALL117" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1737, 952 )
+scale = Vector2( 1, 0.8 )
 
 [node name="WALL50" parent="." instance=ExtResource( 4 )]
 position = Vector2( 823.131, 775 )
@@ -258,12 +325,15 @@ scale = Vector2( 1, 2 )
 position = Vector2( 1019.13, 439 )
 scale = Vector2( 1, 2 )
 
+[node name="WALL132" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2290, 983 )
+
 [node name="WALL75" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2881.13, 507 )
+position = Vector2( 2881, 559 )
 scale = Vector2( 1, 10 )
 
 [node name="WALL44" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1343.13, 704 )
+position = Vector2( 1367, 705 )
 
 [node name="WALL45" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1247.13, 705 )
@@ -276,6 +346,27 @@ position = Vector2( 2218.13, 508 )
 
 [node name="WALL67" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1680.13, 512 )
+
+[node name="WALL110" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1784, 404 )
+
+[node name="WALL109" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1644, 370 )
+scale = Vector2( 1, 0.5 )
+
+[node name="WALL111" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1682, 427 )
+rotation = 0.785398
+scale = Vector2( 1, 0.2 )
+
+[node name="WALL112" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1608, 460 )
+rotation = -0.785398
+scale = Vector2( 1, 0.2 )
+
+[node name="WALL113" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1649, 523 )
+scale = Vector2( 1, 0.2 )
 
 [node name="WALL62" parent="." instance=ExtResource( 4 )]
 position = Vector2( 2328.13, 505 )
@@ -290,8 +381,13 @@ position = Vector2( 2083.13, 194 )
 position = Vector2( 2542.13, 506 )
 
 [node name="WALL65" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2391.13, 774 )
-scale = Vector2( 1, 2 )
+position = Vector2( 2388, 713 )
+
+[node name="WALL136" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2388, 713 )
+
+[node name="WALL115" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1345, 1065 )
 
 [node name="WALL77" parent="." instance=ExtResource( 4 )]
 position = Vector2( 2796.13, 1037 )
@@ -312,19 +408,31 @@ position = Vector2( 1577.13, -453 )
 [node name="WALL35" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1970.13, -478 )
 
-[node name="WALL47" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1167.13, 865 )
-rotation = 1.5708
-scale = Vector2( 1, 5 )
+[node name="WALL97" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2277, -606 )
 
-[node name="WALL30" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1694.13, 169 )
+[node name="WALL99" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2354, -461 )
 rotation = -0.785398
-scale = Vector2( 1, 2 )
+scale = Vector2( 1, 1.8 )
+
+[node name="WALL47" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1234, 871 )
+rotation = 1.5708
+scale = Vector2( 1, 6 )
+
+[node name="WALL130" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1780, 1245 )
+rotation = 1.5708
+scale = Vector2( 1, 6 )
+
+[node name="WALL137" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2545, 1261 )
+rotation = 1.5708
+scale = Vector2( 1, 6 )
 
 [node name="WALL20" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1586.13, -703 )
-scale = Vector2( 1, 0.5 )
+position = Vector2( 1580, -665 )
 
 [node name="WALL14" parent="." instance=ExtResource( 4 )]
 position = Vector2( -224.869, -684 )
@@ -341,22 +449,91 @@ rotation = 1.5708
 scale = Vector2( 1, 20 )
 
 [node name="WALL9" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1613.13, 644 )
+position = Vector2( 1482, 643 )
 rotation = 1.5708
-scale = Vector2( 1, 4 )
+scale = Vector2( 1, 1.8 )
+
+[node name="WALL114" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1733, 642 )
+rotation = 1.5708
 
 [node name="WALL57" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2190.13, 642 )
+position = Vector2( 2313, 639 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL120" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2313, 639 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL121" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2060, 642 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL122" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2062, 778 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL126" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1422, 1005 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL128" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1422, 1005 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL127" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1421, 1128 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL123" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2313, 777 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL124" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1570, 1006 )
+rotation = 1.5708
+scale = Vector2( 1, 1.2 )
+
+[node name="WALL125" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1938, 1008 )
+rotation = 1.5708
+scale = Vector2( 1, 3 )
+
+[node name="WALL133" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2090, 1112 )
+rotation = 1.5708
+scale = Vector2( 1, 3 )
+
+[node name="WALL134" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2423, 1112 )
+rotation = 1.5708
+scale = Vector2( 1, 3 )
+
+[node name="WALL135" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2492, 1043 )
 rotation = 1.5708
 scale = Vector2( 1, 3 )
 
 [node name="WALL71" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2595.13, 904 )
+position = Vector2( 2562, 908 )
+rotation = 1.5708
+scale = Vector2( 1, 8 )
+
+[node name="WALL119" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1685, 781 )
 rotation = 1.5708
 scale = Vector2( 1, 3 )
 
 [node name="WALL61" parent="." instance=ExtResource( 4 )]
-position = Vector2( 1949.13, 571 )
+position = Vector2( 1952, 572 )
 rotation = 1.5708
 scale = Vector2( 1, 4 )
 
@@ -432,6 +609,35 @@ position = Vector2( 1374.13, -235 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
+[node name="WALL30" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1513, -97 )
+rotation = 1.5708
+scale = Vector2( 1, 0.2 )
+
+[node name="RGlass" parent="." instance=ExtResource( 16 )]
+position = Vector2( 1508, 122 )
+
+[node name="RGlass2" parent="." instance=ExtResource( 16 )]
+position = Vector2( 1507, 268 )
+
+[node name="RGlass3" parent="." instance=ExtResource( 16 )]
+position = Vector2( 1579, 343 )
+rotation = 1.5708
+
+[node name="RGlass4" parent="." instance=ExtResource( 16 )]
+position = Vector2( 1710, 343 )
+rotation = 1.5708
+
+[node name="WALL102" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1625, -93 )
+rotation = 1.5708
+scale = Vector2( 1, 0.2 )
+
+[node name="WALL103" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1394, -92 )
+rotation = 1.5708
+scale = Vector2( 1, 0.2 )
+
 [node name="WALL15" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1653.13, -235 )
 rotation = 1.5708
@@ -447,6 +653,32 @@ position = Vector2( 1574.13, -448 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
+[node name="WALL22" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2460, -538 )
+rotation = 1.5708
+
+[node name="WALL28" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1602, -155 )
+
+[node name="WALL29" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1489, -156 )
+
+[node name="WALL104" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1445, 48 )
+rotation = 1.5708
+
+[node name="WALL106" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1445, 48 )
+rotation = 1.5708
+
+[node name="WALL107" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1446, 196 )
+rotation = 1.5708
+
+[node name="WALL108" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1446, 342 )
+rotation = 1.5708
+
 [node name="WALL18" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1579.13, -587 )
 rotation = 1.5708
@@ -460,12 +692,27 @@ scale = Vector2( 1, 2.5 )
 [node name="WALL33" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1589.13, -863 )
 rotation = 1.5708
-scale = Vector2( 1, 5 )
+scale = Vector2( 1, 10 )
 
 [node name="WALL36" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2204.13, -653 )
+position = Vector2( 2008, -638 )
 rotation = 1.5708
-scale = Vector2( 1, 5 )
+scale = Vector2( 1, 2 )
+
+[node name="WALL98" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2390, -740 )
+rotation = 1.5708
+scale = Vector2( 1, 2 )
+
+[node name="WALL101" parent="." instance=ExtResource( 4 )]
+position = Vector2( 1993, -741 )
+rotation = 1.5708
+scale = Vector2( 1, 2 )
+
+[node name="WALL95" parent="." instance=ExtResource( 4 )]
+position = Vector2( 2162, -544 )
+rotation = 1.5708
+scale = Vector2( 1, 1.5 )
 
 [node name="WALL37" parent="." instance=ExtResource( 4 )]
 position = Vector2( 2197.13, -289 )
@@ -486,13 +733,16 @@ scale = Vector2( 1, 10 )
 position = Vector2( -187.869, -680 )
 
 [node name="Node2D4" parent="." instance=ExtResource( 5 )]
-position = Vector2( 1724.13, 380 )
+position = Vector2( 1681, 263 )
 
 [node name="Node2D3" parent="." instance=ExtResource( 5 )]
-position = Vector2( 1552.13, 374 )
+position = Vector2( 1590, 257 )
 
 [node name="Node2D5" parent="." instance=ExtResource( 5 )]
 position = Vector2( 991.131, 684 )
+
+[node name="Node2D11" parent="." instance=ExtResource( 5 )]
+position = Vector2( 478, 611 )
 
 [node name="Node2D7" parent="." instance=ExtResource( 5 )]
 position = Vector2( 1326.13, 386 )
@@ -503,8 +753,17 @@ position = Vector2( 2841.13, 1121 )
 [node name="Node2D6" parent="." instance=ExtResource( 5 )]
 position = Vector2( 1276.13, 519 )
 
+[node name="Node2D13" parent="." instance=ExtResource( 5 )]
+position = Vector2( 1688, 1143 )
+
+[node name="Node2D14" parent="." instance=ExtResource( 5 )]
+position = Vector2( 2422, 1078 )
+
+[node name="Node2D12" parent="." instance=ExtResource( 5 )]
+position = Vector2( 2503, 727 )
+
 [node name="TextureRect" type="TextureRect" parent="."]
-material = SubResource( 2 )
+material = SubResource( 5 )
 margin_left = -5.0
 margin_top = -113.0
 margin_right = 203.0
@@ -518,11 +777,11 @@ __meta__ = {
 }
 
 [node name="TextureRect3" type="TextureRect" parent="."]
-material = SubResource( 2 )
-margin_left = 1081.0
-margin_top = -19.0
-margin_right = 1170.0
-margin_bottom = 40.0
+material = SubResource( 5 )
+margin_left = 874.0
+margin_top = -16.0
+margin_right = 963.0
+margin_bottom = 43.0
 rect_pivot_offset = Vector2( -769, -103 )
 texture = ExtResource( 13 )
 expand = true
@@ -532,12 +791,12 @@ __meta__ = {
 }
 
 [node name="TextureRect4" type="TextureRect" parent="."]
-material = SubResource( 2 )
-margin_left = 946.0
-margin_top = -14.0
-margin_right = 1035.0
-margin_bottom = 45.0
-rect_pivot_offset = Vector2( -769, -103 )
+material = SubResource( 5 )
+margin_left = 825.0
+margin_top = -16.0
+margin_right = 914.0
+margin_bottom = 43.0
+rect_pivot_offset = Vector2( 29, 36 )
 texture = ExtResource( 12 )
 expand = true
 stretch_mode = 6
@@ -545,12 +804,42 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="TextureRect5" type="TextureRect" parent="."]
+material = SubResource( 5 )
+margin_left = 1121.0
+margin_top = -14.0
+margin_right = 1210.0
+margin_bottom = 45.0
+rect_pivot_offset = Vector2( 29, 36 )
+texture = ExtResource( 12 )
+expand = true
+stretch_mode = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect6" type="TextureRect" parent="."]
+material = SubResource( 5 )
+margin_left = 1122.0
+margin_top = -19.0
+margin_right = 1211.0
+margin_bottom = 40.0
+rect_pivot_offset = Vector2( 29, 36 )
+texture = ExtResource( 12 )
+expand = true
+stretch_mode = 6
+flip_v = true
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
 [node name="TextureRect2" type="TextureRect" parent="."]
-material = SubResource( 2 )
-margin_left = 1524.13
-margin_top = 243.0
-margin_right = 1752.13
-margin_bottom = 403.0
+material = SubResource( 5 )
+margin_left = 1533.0
+margin_top = 97.0
+margin_right = 1761.0
+margin_bottom = 257.0
 rect_pivot_offset = Vector2( 87, 42 )
 texture = ExtResource( 7 )
 expand = true
@@ -562,11 +851,29 @@ __meta__ = {
 [node name="Enemy3" parent="." instance=ExtResource( 3 )]
 position = Vector2( 1814.13, -200 )
 
+[node name="Enemy4" parent="." instance=ExtResource( 3 )]
+position = Vector2( 1900, -685 )
+
 [node name="Enemy5" parent="." instance=ExtResource( 3 )]
-position = Vector2( 2663.13, 595 )
+position = Vector2( 2656, 565 )
 
 [node name="Enemy12" parent="." instance=ExtResource( 3 )]
-position = Vector2( 2822.13, 1062 )
+position = Vector2( 2846, 1019 )
+
+[node name="Enemy14" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2578, 1220 )
+
+[node name="Enemy19" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2749, 1231 )
+
+[node name="Enemy23" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2637, 1152 )
+
+[node name="Enemy24" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2647, 1001 )
+
+[node name="Enemy22" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2675, 1233 )
 
 [node name="Enemy8" parent="." instance=ExtResource( 3 )]
 position = Vector2( 2275.13, 401 )
@@ -581,8 +888,24 @@ position = Vector2( 1912.13, 392 )
 position = Vector2( 1923.13, 288 )
 
 [node name="lamp" parent="." instance=ExtResource( 10 )]
-position = Vector2( 211, -122 )
+position = Vector2( 214, -121 )
 rotation = 3.14159
+
+[node name="lamp8" parent="." instance=ExtResource( 10 )]
+position = Vector2( 1638, 1133 )
+rotation = 3.14159
+
+[node name="lamp6" parent="." instance=ExtResource( 10 )]
+position = Vector2( 2846, 261 )
+rotation = 3.14159
+
+[node name="lamp9" parent="." instance=ExtResource( 10 )]
+position = Vector2( 2034, 143 )
+rotation = 3.14159
+
+[node name="lamp7" parent="." instance=ExtResource( 10 )]
+position = Vector2( 2398, 651 )
+rotation = 1.5708
 
 [node name="Enemy11" parent="." instance=ExtResource( 3 )]
 position = Vector2( 2432.13, 683 )
@@ -619,7 +942,19 @@ rotation = -3.0434
 texture = ExtResource( 8 )
 
 [node name="lamp2" parent="." instance=ExtResource( 10 )]
-position = Vector2( 1421.13, -721 )
+position = Vector2( 1421.13, -720 )
+rotation = 3.14159
+
+[node name="lamp3" parent="." instance=ExtResource( 10 )]
+position = Vector2( 2181, -534 )
+rotation = 3.14159
+
+[node name="lamp5" parent="." instance=ExtResource( 10 )]
+position = Vector2( 1405, 582 )
+rotation = 3.14159
+
+[node name="lamp4" parent="." instance=ExtResource( 10 )]
+position = Vector2( 1750, -225 )
 rotation = 3.14159
 
 [node name="Glass" parent="." instance=ExtResource( 11 )]
@@ -628,4 +963,215 @@ scale = Vector2( 1, 0.5 )
 
 [node name="Glass2" parent="." instance=ExtResource( 11 )]
 position = Vector2( 1573, -277 )
+scale = Vector2( 1, 0.7 )
+
+[node name="Glass4" parent="." instance=ExtResource( 11 )]
+position = Vector2( 1590, 601 )
+scale = Vector2( 1, 0.7 )
+
+[node name="Glass6" parent="." instance=ExtResource( 11 )]
+position = Vector2( 1645, 831 )
+scale = Vector2( 1, 0.7 )
+
+[node name="Glass5" parent="." instance=ExtResource( 11 )]
+position = Vector2( 1680, 603 )
+scale = Vector2( 1, 0.7 )
+
+[node name="Glass3" parent="." instance=ExtResource( 11 )]
+position = Vector2( 2066, -356 )
 scale = Vector2( 1, 0.8 )
+
+[node name="DOOR" parent="." instance=ExtResource( 14 )]
+position = Vector2( 1778, -235 )
+rotation = 1.5708
+ID = 2
+
+[node name="DOOR3" parent="." instance=ExtResource( 14 )]
+position = Vector2( 1166, -65 )
+rotation = 1.5708
+ID = 1
+
+[node name="DOOR2" parent="." instance=ExtResource( 14 )]
+position = Vector2( 1779, -107 )
+rotation = 1.5708
+InitialOpen = true
+ID = 2
+
+[node name="DOOR4" parent="." instance=ExtResource( 14 )]
+position = Vector2( 2801, 340 )
+rotation = 1.5708
+ID = 3
+
+[node name="DOOR7" parent="." instance=ExtResource( 14 )]
+position = Vector2( 2824, 906 )
+rotation = 1.5708
+ID = 3
+
+[node name="DOOR8" parent="." instance=ExtResource( 14 )]
+position = Vector2( 2266, 509 )
+rotation = 1.5708
+ID = 3
+
+[node name="DOOR9" parent="." instance=ExtResource( 14 )]
+position = Vector2( 2479, 504 )
+rotation = 1.5708
+ID = 3
+
+[node name="DOOR5" parent="." instance=ExtResource( 14 )]
+position = Vector2( 1935, 782 )
+rotation = 1.5708
+ID = 3
+
+[node name="DOOR6" parent="." instance=ExtResource( 14 )]
+position = Vector2( 2544, 401 )
+ID = 3
+
+[node name="DOOR11" parent="." instance=ExtResource( 14 )]
+position = Vector2( 1888, 1065 )
+ID = 3
+
+[node name="DOOR12" parent="." instance=ExtResource( 14 )]
+position = Vector2( 1497, 1069 )
+ID = 3
+
+[node name="DOOR10" parent="." instance=ExtResource( 14 )]
+position = Vector2( 822, 649 )
+ID = 3
+
+[node name="Node2D2" parent="." instance=ExtResource( 15 )]
+position = Vector2( 1232, -8 )
+DoorID = 1
+
+[node name="Node2D9" parent="." instance=ExtResource( 15 )]
+position = Vector2( 1848, -172 )
+DoorID = 2
+
+[node name="Node2D15" parent="." instance=ExtResource( 15 )]
+position = Vector2( 1699, 1236 )
+rotation = 1.5708
+DoorID = 3
+
+[node name="Node2D10" parent="." instance=ExtResource( 15 )]
+position = Vector2( 2267, -431 )
+DoorID = 2
+
+[node name="ColorRect2" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1866.0
+margin_top = -448.0
+margin_right = 1868.0
+margin_bottom = -175.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1846.0
+margin_top = -448.0
+margin_right = 1849.0
+margin_bottom = -175.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect11" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1231.0
+margin_top = -58.0
+margin_right = 1232.0
+margin_bottom = -17.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect6" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 2869.0
+margin_top = 332.0
+margin_right = 2871.0
+margin_bottom = 896.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect7" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1727.0
+margin_top = 895.0
+margin_right = 2871.0
+margin_bottom = 896.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect8" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1727.0
+margin_top = 895.0
+margin_right = 1728.0
+margin_bottom = 1236.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect9" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1697.0
+margin_top = 1234.0
+margin_right = 1728.0
+margin_bottom = 1236.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect4" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1866.0
+margin_top = -300.0
+margin_right = 2267.0
+margin_bottom = -298.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect10" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1866.0
+margin_top = -300.0
+margin_right = 2267.0
+margin_bottom = -298.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect5" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 2265.0
+margin_top = -430.0
+margin_right = 2267.0
+margin_bottom = -300.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect3" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1847.0
+margin_top = -450.0
+margin_right = 1868.0
+margin_bottom = -448.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
