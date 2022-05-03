@@ -37,6 +37,7 @@ window/size/resizable=false
 [global]
 
 bus=false
+framebuffer_allocation=false
 
 [input]
 

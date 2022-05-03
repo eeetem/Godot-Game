@@ -11,8 +11,8 @@ script/source = "extends KinematicBody2D
 var RunSpeed  : float = 180 # How fast the player will move (pixels/sec).
 var RunAcc  : float = 4;
 
-var walkSpeed  : float = 200 # How fast the player will move (pixels/sec).
-var WalkAcc  : float = 20;
+var walkSpeed  : float = 90 # How fast the player will move (pixels/sec).
+var WalkAcc  : float = 10;
 
 
 var lastDir : Vector2
@@ -46,10 +46,12 @@ var dead = false;
 var LastLit=false
 var Lit = false;
 
-# Called when the node enters the scene tree for the first time.
+
 func _ready():
+
 	GunSound = get_node(\"GunSound\");
 	GunLight = get_node(\"GunshotLight\");
+	yield(get_tree(), \"idle_frame\")
 	yield(get_tree(), \"idle_frame\")
 	var tree = get_tree().root
 	get_parent().remove_child(self)
@@ -89,7 +91,19 @@ func ProcessMovement(delta) -> void:
 		
 	var MaxSpeed;
 	var acceleration;
-	var rotationTarget = get_global_mouse_position()
+
+#	var defaultSize = 1080;
+	#var scaledSize = viewport_base_size.y;
+	# scalefactor = scaledSize/defaultSize;
+	
+
+	
+	var rotationTarget = get_global_mouse_position();
+	#print(\"pre:\"+str(get_global_mouse_position())+\"vs post: \"+str(rotationTarget))
+
+
+
+
 	var rotationSpeed =6;
 	if Input.is_action_pressed(\"sprint\") or  Velocity.length() > walkSpeed+5:#you can't use walk to insantly slow down
 		acceleration = RunAcc
@@ -147,7 +161,7 @@ func ProcessWeapon(delta) -> void:
 		GunSound.stream = shot;
 		GunSound.play();
 		shotCooldown = 1.5;
-		for n in 5:
+		for n in 6:
 			var instance = bullet.instance();
 			instance.position = self.position
 			instance.rotation = self.rotation;
@@ -230,7 +244,15 @@ shadow_enabled = true
 position = Vector2( -2.99999, -2.28882e-05 )
 scale = Vector2( 0.41748, 0.41748 )
 texture = ExtResource( 3 )
-energy = 0.9
+texture_scale = 0.7
+shadow_enabled = true
+
+[node name="TinyLight2" type="Light2D" parent="."]
+position = Vector2( -2.99999, -2.28882e-05 )
+scale = Vector2( 0.41748, 0.41748 )
+texture = ExtResource( 3 )
+texture_scale = 0.2
+energy = 0.5
 shadow_enabled = true
 
 [node name="GunSound" type="AudioStreamPlayer2D" parent="."]

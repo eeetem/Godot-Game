@@ -13,10 +13,12 @@ export var DoorID = -2;
 var doors = [];
 var sfx;
 func _ready():
+	yield(get_tree(), \"idle_frame\")#make doors run first
 	sfx = get_node(\"presssfx\");
 	var dss = get_tree().get_nodes_in_group(\"doors\")
 	for d in dss:
 		if d.ID == DoorID:
+			print(\"button \"+name+\"adding door:\"+d.name)
 			doors.append(d);
 			
 	

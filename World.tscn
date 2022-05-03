@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=2]
+[gd_scene load_steps=22 format=2]
 
 [ext_resource path="res://Enviroment/Controlls.png" type="Texture" id=1]
 [ext_resource path="res://Shaders/LightingShader.tres" type="Shader" id=2]
@@ -16,6 +16,7 @@
 [ext_resource path="res://Enviroment/Door.tscn" type="PackedScene" id=14]
 [ext_resource path="res://Enviroment/Buttons/ToggleButton.tscn" type="PackedScene" id=15]
 [ext_resource path="res://Enviroment/RGlass.tscn" type="PackedScene" id=16]
+[ext_resource path="res://Enviroment/exit.png" type="Texture" id=17]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 2 )
@@ -46,11 +47,9 @@ __meta__ = {
 }
 
 [node name="CanvasModulate" type="CanvasModulate" parent="Techincal"]
-visible = false
 color = Color( 0, 0, 0, 1 )
 
 [node name="LosBlocker" type="Sprite" parent="Techincal"]
-visible = false
 light_mask = 2
 position = Vector2( 621, 160 )
 scale = Vector2( 1394.65, 353.575 )
@@ -75,9 +74,6 @@ scale = Vector2( 1.00137, 1 )
 
 [node name="Area2D3" parent="." instance=ExtResource( 3 )]
 position = Vector2( 1465.13, 682 )
-
-[node name="Enemy2" parent="." instance=ExtResource( 3 )]
-position = Vector2( 1776.13, -1192 )
 
 [node name="WALL5" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1857, -645 )
@@ -468,7 +464,7 @@ rotation = 1.5708
 scale = Vector2( 1, 1.2 )
 
 [node name="WALL121" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2060, 642 )
+position = Vector2( 2061, 640 )
 rotation = 1.5708
 scale = Vector2( 1, 1.2 )
 
@@ -523,9 +519,9 @@ rotation = 1.5708
 scale = Vector2( 1, 3 )
 
 [node name="WALL71" parent="." instance=ExtResource( 4 )]
-position = Vector2( 2562, 908 )
+position = Vector2( 2383, 904 )
 rotation = 1.5708
-scale = Vector2( 1, 8 )
+scale = Vector2( 1, 6 )
 
 [node name="WALL119" parent="." instance=ExtResource( 4 )]
 position = Vector2( 1685, 781 )
@@ -759,6 +755,12 @@ position = Vector2( 1688, 1143 )
 [node name="Node2D14" parent="." instance=ExtResource( 5 )]
 position = Vector2( 2422, 1078 )
 
+[node name="Node2D16" parent="." instance=ExtResource( 5 )]
+position = Vector2( 2127, 1157 )
+
+[node name="Node2D17" parent="." instance=ExtResource( 5 )]
+position = Vector2( 2334, 956 )
+
 [node name="Node2D12" parent="." instance=ExtResource( 5 )]
 position = Vector2( 2503, 727 )
 
@@ -784,6 +786,48 @@ margin_right = 963.0
 margin_bottom = 43.0
 rect_pivot_offset = Vector2( -769, -103 )
 texture = ExtResource( 13 )
+expand = true
+stretch_mode = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect7" type="TextureRect" parent="."]
+material = SubResource( 5 )
+margin_left = 1803.0
+margin_top = 583.0
+margin_right = 1824.0
+margin_bottom = 597.0
+rect_pivot_offset = Vector2( -769, -103 )
+texture = ExtResource( 17 )
+expand = true
+stretch_mode = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect9" type="TextureRect" parent="."]
+material = SubResource( 5 )
+margin_left = 1768.0
+margin_top = -259.0
+margin_right = 1789.0
+margin_bottom = -245.0
+rect_pivot_offset = Vector2( -769, -103 )
+texture = ExtResource( 17 )
+expand = true
+stretch_mode = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect8" type="TextureRect" parent="."]
+material = SubResource( 5 )
+margin_left = 2762.0
+margin_top = 352.0
+margin_right = 2783.0
+margin_bottom = 366.0
+rect_pivot_offset = Vector2( -769, -103 )
+texture = ExtResource( 17 )
 expand = true
 stretch_mode = 6
 __meta__ = {
@@ -870,10 +914,16 @@ position = Vector2( 2749, 1231 )
 position = Vector2( 2637, 1152 )
 
 [node name="Enemy24" parent="." instance=ExtResource( 3 )]
-position = Vector2( 2647, 1001 )
+position = Vector2( 2617, 997 )
 
 [node name="Enemy22" parent="." instance=ExtResource( 3 )]
 position = Vector2( 2675, 1233 )
+
+[node name="Enemy25" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2252, 1209 )
+
+[node name="Enemy26" parent="." instance=ExtResource( 3 )]
+position = Vector2( 2399, 974 )
 
 [node name="Enemy8" parent="." instance=ExtResource( 3 )]
 position = Vector2( 2275.13, 401 )
@@ -882,7 +932,7 @@ position = Vector2( 2275.13, 401 )
 position = Vector2( 2488.13, 396 )
 
 [node name="Enemy10" parent="." instance=ExtResource( 3 )]
-position = Vector2( 1912.13, 392 )
+position = Vector2( 1926, 398 )
 
 [node name="Enemy13" parent="." instance=ExtResource( 3 )]
 position = Vector2( 1923.13, 288 )
@@ -1003,7 +1053,7 @@ rotation = 1.5708
 ID = 3
 
 [node name="DOOR7" parent="." instance=ExtResource( 14 )]
-position = Vector2( 2824, 906 )
+position = Vector2( 2796, 900 )
 rotation = 1.5708
 ID = 3
 
@@ -1038,6 +1088,10 @@ ID = 3
 position = Vector2( 822, 649 )
 ID = 3
 
+[node name="DOOR13" parent="." instance=ExtResource( 14 )]
+position = Vector2( 1367, 641 )
+ID = 3
+
 [node name="Node2D2" parent="." instance=ExtResource( 15 )]
 position = Vector2( 1232, -8 )
 DoorID = 1
@@ -1059,7 +1113,7 @@ DoorID = 2
 material = SubResource( 4 )
 margin_left = 1866.0
 margin_top = -448.0
-margin_right = 1868.0
+margin_right = 1869.0
 margin_bottom = -175.0
 color = Color( 1, 0, 0, 1 )
 __meta__ = {
@@ -1079,7 +1133,7 @@ __meta__ = {
 
 [node name="ColorRect11" type="ColorRect" parent="."]
 material = SubResource( 4 )
-margin_left = 1231.0
+margin_left = 1230.0
 margin_top = -58.0
 margin_right = 1232.0
 margin_bottom = -17.0
@@ -1110,12 +1164,34 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="ColorRect13" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 1375.0
+margin_top = 582.0
+margin_right = 2147.0
+margin_bottom = 585.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="ColorRect8" type="ColorRect" parent="."]
 material = SubResource( 4 )
 margin_left = 1727.0
 margin_top = 895.0
 margin_right = 1728.0
 margin_bottom = 1236.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect12" type="ColorRect" parent="."]
+material = SubResource( 4 )
+margin_left = 2146.0
+margin_top = 556.0
+margin_right = 2147.0
+margin_bottom = 897.0
 color = Color( 1, 0, 0, 1 )
 __meta__ = {
 "_edit_use_anchors_": false

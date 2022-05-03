@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://Enviroment/Wall.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Enviroment/door.mp3" type="AudioStream" id=2]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends StaticBody2D
@@ -17,26 +18,34 @@ export var ID = -1;
 
 var IsOpen;
 
+var audioplayer : AudioStreamPlayer2D;
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	add_to_group(\"doors\");
 	initPos = self.position;
 	SetOpen(InitialOpen);
+	audioplayer = get_node(\"AudioStreamPlayer2D\")
 
 
 
 func _process(delta):
 	if(self.position != targetPos):
-		if position.distance_to(targetPos) < delta *10:
+		if(!audioplayer.playing):
+			audioplayer.play();
+		if position.distance_to(targetPos) < delta *12:
 			position = targetPos
 		else:
-			position += position.direction_to(targetPos).normalized()*delta*10;
-
+			position += position.direction_to(targetPos).normalized()*delta*12;
+	else:
+		if(audioplayer.playing):
+			audioplayer.stop();
 
 
 func SetOpen(open):
 	IsOpen = open;
 	if open:
+		print(\"opening door: \"+name)
 		targetPos = initPos+Vector2(0,80).rotated(self.rotation);
 	else:
 		targetPos = initPos;
@@ -54,3 +63,9 @@ color = Color( 0, 0, 0, 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." index="3"]
+stream = ExtResource( 2 )
+volume_db = 24.0
+max_distance = 1500.0
+attenuation = 5.09824

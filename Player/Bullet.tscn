@@ -15,7 +15,7 @@ func _ready():
 	remove_child(line)
 	get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(line)
 	line.add_point(global_position)
-	rotate(deg2rad(rand_range(-5.0, 5.0)))
+	rotate(deg2rad(rand_range(-4.0, 4.0)))
 	var collision = move_and_collide(Vector2(800, 0).rotated(self.rotation),false)
 	line.add_point(global_position)
 	if collision!= null and collision.collider.has_method(\"GetHit\"):

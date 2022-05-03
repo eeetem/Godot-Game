@@ -22,6 +22,7 @@ var reinforced = false
 
 func GetHit():
 	get_node(\"CollisionShape2D\").disabled = true; 
+	yield(get_tree(), \"idle_frame\")#cringe
 	for n in 5:
 		var instance = shard.instance();
 		instance.position = self.position
