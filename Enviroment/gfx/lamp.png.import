@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/Controlls.png-2c63e0d9fd8f3a66378194edc9c06af6.stex"
+path="res://.import/lamp.png-de2e66abe6166de41708e477377bf00d.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Enviroment/Controlls.png"
-dest_files=[ "res://.import/Controlls.png-2c63e0d9fd8f3a66378194edc9c06af6.stex" ]
+source_file="res://Enviroment/gfx/lamp.png"
+dest_files=[ "res://.import/lamp.png-de2e66abe6166de41708e477377bf00d.stex" ]
 
 [params]
 
@@ -20,7 +20,7 @@ compress/hdr_mode=0
 compress/bptc_ldr=0
 compress/normal_map=0
 flags/repeat=0
-flags/filter=true
+flags/filter=false
 flags/mipmaps=false
 flags/anisotropic=false
 flags/srgb=2

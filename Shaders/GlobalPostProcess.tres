@@ -8,16 +8,33 @@ uniform float healthmag = 100f;
 float random (vec2 st) {
     return fract(sin(dot(st.xy,vec2(12.9898,78.233)))*43758.5453123);
 }
+float Noise21 (vec2 p, float ta, float tb) {
+    return fract(sin(p.x*ta+p.y*tb)*5678.);
+}
 
 void fragment(){
+	//pixelate
 	vec2 newUV = vec2(floor(UV.x*magnitude)/magnitude,floor(UV.y*magnitude)/magnitude);
 	COLOR = texture(TEXTURE, newUV);
-	float offset = random(vec2((UV.x+TIME)-(UV.y+TIME),UV.x+UV.y+TIME));
-	COLOR.a += offset/5f;
 	
+	//noise
+	//float NormalisedTime = float(int(TIME*100f)%20) + float(int(-TIME*10f)%10);
+//	float offset = random(normalize(vec2(UV.x+NormalisedTime,UV.y-NormalisedTime)));
+//	COLOR.a += offset/5f;
+
+
+	float t = TIME*100f; // tweak the start moment
+	float ta = t*.654321;
+	float tb = t*(ta*.12456);
+	float c = Noise21(UV, ta, tb);
+	
+	COLOR.a += c/5f;
+	//reden
 	COLOR.r += 0.0001f;
-	COLOR.r *= 1f+ (healthmag/250f)*abs(random(UV+TIME*10f));
-	COLOR.gb *= 1f- (healthmag/80f)*abs(random(UV+TIME*10f));
+	COLOR.r *= 1f+ (healthmag/300f);
+	COLOR.gb *= 1f- (healthmag/500f);
 	
 }
+
+
 "

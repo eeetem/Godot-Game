@@ -6,7 +6,7 @@ extents = Vector2( 9, 70 )
 [sub_resource type="OccluderPolygon2D" id=2]
 polygon = PoolVector2Array( -9, -70, -9, 70, 9, 70, 9, -70 )
 
-[node name="WALL" type="StaticBody2D"]
+[node name="WALL" type="StaticBody2D" groups=["Walls"]]
 collision_mask = 7
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

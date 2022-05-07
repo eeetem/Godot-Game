@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/shard2.png-05457447b37e51f9eb08a9e63c1257b1.stex"
+path="res://.import/glass.png-b8354554e629323a4fa038fad6633e81.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Enviroment/shard2.png"
-dest_files=[ "res://.import/shard2.png-05457447b37e51f9eb08a9e63c1257b1.stex" ]
+source_file="res://Enviroment/gfx/glass.png"
+dest_files=[ "res://.import/glass.png-b8354554e629323a4fa038fad6633e81.stex" ]
 
 [params]
 

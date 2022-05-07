@@ -18,7 +18,6 @@ func _ready():
 	var dss = get_tree().get_nodes_in_group(\"doors\")
 	for d in dss:
 		if d.ID == DoorID:
-			print(\"button \"+name+\"adding door:\"+d.name)
 			doors.append(d);
 			
 	

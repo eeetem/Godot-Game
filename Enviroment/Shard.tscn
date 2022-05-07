@@ -7,13 +7,13 @@ script/source = "extends RigidBody2D
 # Declare member variables here. Examples:
 # var a = 2
 # var b = \"text\"
-var texture1 = preload(\"res://Enviroment/shard.png\")
-var texture2 = preload(\"res://Enviroment/shard2.png\")
-var texture3 = preload(\"res://Enviroment/shard3.png\")
-var sound1 = preload(\"res://Enviroment/Shatter (1).mp3\");
-var sound2 = preload(\"res://Enviroment/Shatter (2).mp3\");
-var sound3 = preload(\"res://Enviroment/Shatter (3).mp3\");
-var sound4 = preload(\"res://Enviroment/Shatter (4).mp3\");
+var texture1 = preload(\"res://Enviroment/gfx/shard.png\")
+var texture2 = preload(\"res://Enviroment/gfx/shard2.png\")
+var texture3 = preload(\"res://Enviroment/gfx/shard3.png\")
+var sound1 = preload(\"res://Enviroment/sfx/Shatter (1).mp3\");
+var sound2 = preload(\"res://Enviroment/sfx/Shatter (2).mp3\");
+var sound3 = preload(\"res://Enviroment/sfx/Shatter (3).mp3\");
+var sound4 = preload(\"res://Enviroment/sfx/Shatter (4).mp3\");
 
 
 # Called when the node enters the scene tree for the first time.
