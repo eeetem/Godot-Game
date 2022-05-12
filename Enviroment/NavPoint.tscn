@@ -1,0 +1,60 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+
+var ConnectedNavPoints = [];
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	var space_state = get_world_2d().direct_space_state
+	for navpoint in get_tree().get_nodes_in_group(\"NavPoints\"):
+		if navpoint != self:
+			var result = space_state.intersect_ray(self.position, navpoint.position,[],5);
+			if !result:
+				ConnectedNavPoints.append(navpoint);
+	yield(get_tree(), \"idle_frame\")
+	if !Globals.showNavDebug:
+		get_node(\"ColorRect\").visible = false;
+	else:
+		for node in ConnectedNavPoints:
+			var line = Line2D.new()
+			get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(line)
+			line.add_point(position)
+			line.add_point(node.position);
+	if Globals.DoNavDemo:
+		while 1<2:
+			Globals.DoNavDemo = false;
+			randomize()
+			var options = get_tree().get_nodes_in_group(\"NavPoints\")
+			var rand_index:int = randi() % options.size()
+			var rand_index2:int = randi() % options.size()
+			print(\"finding path from \"+options[rand_index].name +\"to\"+options[rand_index2].name)
+			var path = get_parent().StartFindPathBetween(options[rand_index],options[rand_index2])
+			for p in path:
+				Player.position = p;
+				yield(get_tree().create_timer(1.0), \"timeout\")
+			yield(get_tree().create_timer(2.0), \"timeout\")
+		
+
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+#func _process(delta):
+#	pass
+"
+
+[node name="NavPoint" type="Node2D" groups=["NavPoints"]]
+script = SubResource( 1 )
+
+[node name="ColorRect" type="ColorRect" parent="."]
+margin_left = -21.0
+margin_top = -21.0
+margin_right = 19.0
+margin_bottom = 19.0
+color = Color( 1, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}

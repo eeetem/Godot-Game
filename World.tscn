@@ -5,6 +5,7 @@
 [ext_resource path="res://Enemy/Enemy.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Enviroment/Wall.tscn" type="PackedScene" id=4]
 [ext_resource path="res://Ammo.tscn" type="PackedScene" id=5]
+[ext_resource path="res://Enviroment/NavPoint.tscn" type="PackedScene" id=6]
 [ext_resource path="res://Enviroment/gfx/r.png" type="Texture" id=7]
 [ext_resource path="res://caster.png" type="Texture" id=9]
 [ext_resource path="res://Enviroment/Lamp.tscn" type="PackedScene" id=10]
@@ -19,81 +20,6 @@
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 2 )
 
-[sub_resource type="GDScript" id=6]
-script/source = "extends Navigation2D
-
-
-# Declare member variables here. Examples:
-# var a = 2
-# var b = \"text\"
-
-var blood = preload(\"res://Enemy/Blood.tscn\")
-
-# Called when the node enters the scene tree for the first time.
-func _ready():
-	yield(get_tree(), \"idle_frame\")
-	var Walls = get_tree().get_nodes_in_group(\"Walls\")
-	
-	var polygon = $NavigationPolygonInstance.navpoly 
-	print(\"generating navpoly\");
-	var i = 1;
-	
-	
-	for Wall in Walls:
-		i+=1;
-		var outline = PoolVector2Array();
-		var xextent = 8.5
-		var yextent = 69.5
-		
-		xextent=xextent*Wall.scale.x
-		yextent=yextent*Wall.scale.y
-		
-		var corner = Wall.position - Vector2(xextent,yextent)
-		
-		
-		yextent=yextent*2
-		xextent=xextent*2
-		
-		
-		
-		
-		outline.append(_rotateAbout(corner + Vector2(xextent,0),Wall.position,Wall.rotation))
-		outline.append(_rotateAbout(corner + Vector2(xextent,yextent),Wall.position,Wall.rotation))
-		outline.append(_rotateAbout(corner + Vector2(0,yextent),Wall.position,Wall.rotation))
-		outline.append(_rotateAbout(corner,Wall.position,Wall.rotation))
-		
-		print(Wall.name +\":\"+str(outline))
-		polygon.add_outline(outline)
-		polygon.make_polygons_from_outlines()
-	print(\"generating navpoly done\");
-	
-	polygon.make_polygons_from_outlines()
-	
-	var arr = get_simple_path(Player.position+Vector2(100,0),Vector2(500,-300),true);
-	print(str(arr.size()))
-	for vector in arr:
-		var instance = blood.instance();
-		instance.position = vector
-		instance.rotation = self.rotation;
-		get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(instance);
-		Player.position = vector
-		yield(get_tree().create_timer(5.0), \"timeout\")
-
-
-
-func _rotateAbout(p1,p2,angle):
-	var diff = p1 - p2
-	p1 = diff.rotated(angle) + p2
-	return p1
-
-
-"
-
-[sub_resource type="NavigationPolygon" id=7]
-vertices = PoolVector2Array( 3834, -823, 4244, 2240, -902, 2152, -573, -1283 )
-polygons = [ PoolIntArray( 0, 1, 2, 3 ) ]
-outlines = [ PoolVector2Array( -573, -1283, -902, 2152, 4244, 2240, 3834, -823 ) ]
-
 [sub_resource type="ShaderMaterial" id=3]
 shader = ExtResource( 2 )
 
@@ -103,12 +29,61 @@ shader = ExtResource( 2 )
 [sub_resource type="ShaderMaterial" id=4]
 shader = ExtResource( 2 )
 
+[sub_resource type="GDScript" id=6]
+script/source = "extends Node
+
+
+
+
+
+var searching = false;
+
+#signal signal 
+var ignored = []
+func StartFindPathBetween(n1,n2):
+	ignored = []
+	return FindPathBetween([n1,n2])
+	#return [n1.position,n2.position]
+
+func FindPathBetween(args):
+	ignored.append(self)
+	var n1 = args[0]
+	var n2 = args[1]
+	print(\"looking from: \"+n1.name)
+	for node in n1.ConnectedNavPoints:
+		if(node == n2):
+			print(\"Found Connection: \" + str([n1.position, n2.position]))
+			return [n1.position, n2.position]
+			
+	var threads = []
+	for node in n1.ConnectedNavPoints:	
+		if ignored.has(node):
+			continue
+		ignored.append(node)
+		var thread = Thread.new()
+		threads.append(thread);
+		thread.start(self,'FindPathBetween',[node,n2])
+	
+	var ShortestPath = null
+	for thread in threads:
+		var path = thread.wait_to_finish();
+		if path == null:
+			continue
+		print(\"proposed path found: \"+str(path))
+		if(ShortestPath == null or path.size()+1 < ShortestPath.size()):
+			var newShortestPath = [n1.position]
+			newShortestPath += path
+			ShortestPath=newShortestPath;
+	print(\"A path found: \"+str(ShortestPath))
+	return ShortestPath;
+
+"
+
 [node name="World" type="Node"]
 
 [node name="Techincal" type="Node" parent="."]
 
 [node name="ColorRect" type="ColorRect" parent="Techincal"]
-visible = false
 material = SubResource( 1 )
 margin_left = -6471.0
 margin_top = -4105.0
@@ -121,11 +96,9 @@ __meta__ = {
 }
 
 [node name="CanvasModulate" type="CanvasModulate" parent="Techincal"]
-visible = false
 color = Color( 0, 0, 0, 1 )
 
 [node name="LosBlocker" type="Sprite" parent="Techincal"]
-visible = false
 light_mask = 2
 position = Vector2( 621, 160 )
 scale = Vector2( 1394.65, 353.575 )
@@ -135,286 +108,236 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="Navigation2D" type="Navigation2D" parent="Techincal"]
-script = SubResource( 6 )
+[node name="Enemies" type="Node" parent="."]
 
-[node name="NavigationPolygonInstance" type="NavigationPolygonInstance" parent="Techincal/Navigation2D"]
-navpoly = SubResource( 7 )
-__meta__ = {
-"_edit_lock_": true
-}
-
-[node name="Enemies" type="Node" parent="Techincal"]
-
-[node name="Area2D2" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Area2D2" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 424.131, 610 )
 
-[node name="Area2D5" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Area2D5" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2449, 597 )
 
-[node name="Area2D4" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Area2D4" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1304.13, 414 )
 scale = Vector2( 1.00137, 1 )
 
-[node name="Area2D3" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Area2D3" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1465.13, 682 )
 
-[node name="Enemy15" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy15" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 774, -376 )
 rotation = 1.5708
 
-[node name="Enemy27" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy27" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 124, -689 )
 rotation = 1.5708
 
-[node name="Enemy17" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy17" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1421, 262 )
 rotation = 1.5708
 
-[node name="Enemy16" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy16" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1419, 114 )
 rotation = 1.5708
 
-[node name="Enemy18" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy18" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1593, 403 )
 rotation = 1.5708
 
-[node name="Enemy20" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy20" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1425, 1070 )
 rotation = 1.5708
 
-[node name="Enemy21" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy21" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2145, 1062 )
 rotation = 1.5708
 
-[node name="Enemy3" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy3" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1802, -173 )
 
-[node name="Enemy4" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy4" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1900, -685 )
 
-[node name="Enemy5" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy5" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2656, 565 )
 
-[node name="Enemy12" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy12" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2846, 1019 )
 
-[node name="Enemy14" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy14" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2578, 1220 )
 
-[node name="Enemy19" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy19" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2749, 1231 )
 
-[node name="Enemy23" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy23" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2637, 1152 )
 
-[node name="Enemy24" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy24" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2617, 997 )
 
-[node name="Enemy22" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy22" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2675, 1233 )
 
-[node name="Enemy25" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy25" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2252, 1209 )
 
-[node name="Enemy26" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy26" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2399, 974 )
 
-[node name="Enemy8" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy8" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2275.13, 401 )
 
-[node name="Enemy9" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy9" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2488.13, 396 )
 
-[node name="Enemy10" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy10" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1926, 398 )
 
-[node name="Enemy13" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy13" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1923.13, 288 )
 
-[node name="Enemy11" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy11" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 2432.13, 683 )
 
-[node name="Enemy7" parent="Techincal/Enemies" instance=ExtResource( 3 )]
+[node name="Enemy7" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1937.13, 671 )
 
-[node name="Ammo" type="Node" parent="Techincal"]
+[node name="Enviroment" type="Node" parent="."]
 
-[node name="Node2D" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( -49, -688 )
-
-[node name="Node2D4" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 1681, 263 )
-
-[node name="Node2D3" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 1590, 257 )
-
-[node name="Node2D5" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 991.131, 684 )
-
-[node name="Node2D11" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 478, 611 )
-
-[node name="Node2D7" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 1326.13, 386 )
-
-[node name="Node2D8" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 2841.13, 1121 )
-
-[node name="Node2D6" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 1276.13, 519 )
-
-[node name="Node2D13" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 1688, 1143 )
-
-[node name="Node2D14" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 2422, 1078 )
-
-[node name="Node2D16" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 2127, 1157 )
-
-[node name="Node2D17" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 2334, 956 )
-
-[node name="Node2D12" parent="Techincal/Ammo" instance=ExtResource( 5 )]
-position = Vector2( 2503, 727 )
-
-[node name="Enviroment" type="Node" parent="Techincal"]
-
-[node name="WALL5" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL5" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1857, -645 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 1.5 )
 
-[node name="WALL21" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL21" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2540, -504 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 4 )
 
-[node name="WALL34" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL34" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1857.13, -8 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 6.3 )
 
-[node name="WALL91" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL91" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1718, -143 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 1.2 )
 
-[node name="WALL38" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL38" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2066, -472 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 0.9 )
 
-[node name="WALL96" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL96" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2276, -473 )
 rotation = 1.27602e-06
 
-[node name="WALL6" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL6" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1370.13, 103 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 4.7 )
 
-[node name="WALL11" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL11" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 539, -100 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 2 )
 
-[node name="WALL7" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL7" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1344.13, -507 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 2 )
 
-[node name="WALL31" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL31" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1252, -782 )
 rotation = 1.27602e-06
 
-[node name="WALL89" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL89" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2260, -804 )
 rotation = 1.27602e-06
 scale = Vector2( 1, 0.7 )
 
-[node name="WALL4" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL4" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1157, -340 )
 rotation = 1.74846e-07
 scale = Vector2( 1, 4.5 )
 
-[node name="WALL87" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL87" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 627, -254 )
 rotation = 1.74846e-07
 scale = Vector2( 1, 3 )
 
-[node name="WALL90" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL90" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 808, -338 )
 rotation = 1.74846e-07
 scale = Vector2( 1, 4.2 )
 
-[node name="WALL93" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL93" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 736, -338 )
 rotation = 1.74846e-07
 scale = Vector2( 1, 4.2 )
 
-[node name="WALL12" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL12" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1235, -294 )
 rotation = 1.74846e-07
 scale = Vector2( 1, 5 )
 
-[node name="WALL2" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL2" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 284, -31 )
 rotation = 0.785398
 scale = Vector2( 1, 0.5 )
 
-[node name="WALL82" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL82" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 393, -76 )
 rotation = -0.785398
 scale = Vector2( 1, 0.5 )
 
-[node name="WALL83" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL83" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 284, -134 )
 scale = Vector2( 2, 1 )
 
-[node name="WALL138" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL138" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 389, -353 )
 rotation = 1.5708
 scale = Vector2( 1, 1.5 )
 
-[node name="WALL86" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL86" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 583, -307 )
 rotation = 1.5708
 scale = Vector2( 1, 0.5 )
 
-[node name="WALL88" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL88" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 682, -35 )
 rotation = 1.5708
 scale = Vector2( 1, 0.9 )
 
-[node name="WALL94" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL94" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 973, -35 )
 rotation = 1.5708
 scale = Vector2( 1, 2.5 )
 
-[node name="WALL26" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL26" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 105, -133 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL58" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL58" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1944, 643 )
 rotation = 1.5708
 
-[node name="WALL118" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL118" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1691, 1123 )
 rotation = 1.5708
 
-[node name="WALL68" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL68" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2392.13, 572 )
 rotation = 1.5708
 
-[node name="WALL72" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL72" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2392.13, 442 )
 rotation = 1.5708
 
-[node name="TextEdit" type="TextEdit" parent="Techincal/Enviroment"]
+[node name="TextEdit" type="TextEdit" parent="Enviroment"]
 material = SubResource( 3 )
 margin_left = 1874.13
 margin_top = 157.0
@@ -425,448 +348,448 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="WALL80" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL80" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2006.13, 135 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL73" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL73" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2621.13, 445 )
 rotation = 1.5708
 
-[node name="WALL74" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL74" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2550, 763 )
 rotation = 1.5708
 
-[node name="WALL76" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL76" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2802.13, 1186 )
 rotation = 1.5708
 
-[node name="WALL27" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL27" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 453, -251 )
 rotation = 2.0944
 
-[node name="WALL25" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL25" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( -43, -42 )
 scale = Vector2( 1, 2 )
 
-[node name="WALL40" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL40" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1590.13, 521 )
 scale = Vector2( 1, 0.9 )
 
-[node name="WALL105" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL105" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1508, 396 )
 scale = Vector2( 1, 0.6 )
 
-[node name="WALL43" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL43" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1328.13, 510 )
 scale = Vector2( 1, 0.75 )
 
-[node name="WALL52" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL52" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 182, 565 )
 
-[node name="WALL48" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL48" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1572, 715 )
 scale = Vector2( 1, 0.9 )
 
-[node name="WALL116" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL116" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1645, 931 )
 
-[node name="WALL129" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL129" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1499, 1168 )
 
-[node name="WALL131" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL131" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2057, 1179 )
 scale = Vector2( 1, 0.85 )
 
-[node name="WALL117" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL117" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1737, 943 )
 scale = Vector2( 1, 0.8 )
 
-[node name="WALL50" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL50" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 823.131, 764 )
 scale = Vector2( 1, 1.4 )
 
-[node name="WALL51" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL51" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1040.13, 439 )
 scale = Vector2( 1, 2 )
 
-[node name="WALL132" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL132" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2290, 983 )
 
-[node name="WALL75" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL75" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2881, 559 )
 scale = Vector2( 1, 10 )
 
-[node name="WALL44" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL44" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1365, 722 )
 
-[node name="WALL45" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL45" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1244.13, 722 )
 
-[node name="WALL49" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL49" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 912.131, 722 )
 
-[node name="WALL41" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL41" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2223.13, 507 )
 scale = Vector2( 1, 0.8 )
 
-[node name="WALL62" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL62" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2331.13, 507 )
 scale = Vector2( 1, 0.8 )
 
-[node name="WALL63" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL63" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2453.13, 507 )
 scale = Vector2( 1, 0.8 )
 
-[node name="WALL67" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL67" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1681.13, 507 )
 scale = Vector2( 1, 0.8 )
 
-[node name="WALL110" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL110" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1784, 363 )
 
-[node name="WALL109" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL109" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1644, 370 )
 scale = Vector2( 1, 0.5 )
 
-[node name="WALL111" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL111" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1682, 416 )
 rotation = 0.785398
 scale = Vector2( 1, 0.2 )
 
-[node name="WALL112" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL112" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1615, 460 )
 rotation = -0.785398
 scale = Vector2( 1, 0.2 )
 
-[node name="WALL113" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL113" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1649, 520 )
 scale = Vector2( 1, 0.2 )
 
-[node name="WALL81" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL81" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2083.13, 193 )
 scale = Vector2( 1, 0.7 )
 
-[node name="WALL64" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL64" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2542.13, 506 )
 
-[node name="WALL136" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL136" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2389, 715 )
 scale = Vector2( 1, 0.9 )
 
-[node name="WALL115" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL115" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1365, 1049 )
 
-[node name="WALL77" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL77" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2797.13, 1036 )
 scale = Vector2( 1, 2 )
 
-[node name="WALL66" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL66" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2471.13, 702 )
 
-[node name="WALL59" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL59" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1883.13, 715 )
 scale = Vector2( 1, 0.9 )
 
-[node name="WALL60" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL60" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1987.13, 715 )
 scale = Vector2( 1, 0.9 )
 
-[node name="WALL19" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL19" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1575, -492 )
 scale = Vector2( 1, 0.5 )
 
-[node name="WALL100" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL100" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1575, -404 )
 scale = Vector2( 1, 0.5 )
 
-[node name="WALL35" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL35" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1970.13, -478 )
 
-[node name="WALL97" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL97" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2276, -613 )
 
-[node name="WALL99" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL99" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2371, -467 )
 rotation = -0.785398
 scale = Vector2( 1, 1.6 )
 
-[node name="WALL47" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL47" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1234, 871 )
 rotation = 1.5708
 scale = Vector2( 1, 6 )
 
-[node name="WALL130" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL130" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1780, 1247 )
 rotation = 1.5708
 scale = Vector2( 1, 6 )
 
-[node name="WALL137" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL137" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2545, 1268 )
 rotation = 1.5708
 scale = Vector2( 1, 6 )
 
-[node name="WALL20" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL20" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1580, -663 )
 
-[node name="WALL14" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL14" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( -104, -642 )
 rotation = 3.14159
 
-[node name="WALL3" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL3" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 973, -641 )
 rotation = 1.5708
 scale = Vector2( 1, 2.5 )
 
-[node name="WALL92" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL92" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 325, -641 )
 rotation = 1.5708
 scale = Vector2( 1, 6 )
 
-[node name="WALL13" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL13" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 543, -721 )
 rotation = 1.5708
 scale = Vector2( 1, 10 )
 
-[node name="WALL9" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL9" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1482, 643 )
 rotation = 1.5708
 scale = Vector2( 1, 1.8 )
 
-[node name="WALL114" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL114" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1733, 642 )
 rotation = 1.5708
 
-[node name="WALL57" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL57" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2314, 643 )
 rotation = 1.5708
 scale = Vector2( 1, 1.2 )
 
-[node name="WALL121" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL121" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2098, 643 )
 rotation = 1.5708
 scale = Vector2( 1, 1.2 )
 
-[node name="WALL122" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL122" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2062, 787 )
 rotation = 1.5708
 scale = Vector2( 1, 1.2 )
 
-[node name="WALL126" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL126" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1514, 1010 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL127" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL127" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1406, 1128 )
 rotation = 1.5708
 scale = Vector2( 1, 1.2 )
 
-[node name="WALL123" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL123" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2314, 787 )
 rotation = 1.5708
 scale = Vector2( 1, 1.2 )
 
-[node name="WALL125" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL125" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1938, 1008 )
 rotation = 1.5708
 scale = Vector2( 1, 3 )
 
-[node name="WALL133" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL133" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2230, 1111 )
 rotation = 1.5708
 scale = Vector2( 1, 5 )
 
-[node name="WALL135" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL135" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2509, 1044 )
 rotation = 1.5708
 scale = Vector2( 1, 3 )
 
-[node name="WALL71" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL71" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2368, 904 )
 rotation = 1.5708
 scale = Vector2( 1, 6 )
 
-[node name="WALL119" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL119" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1685, 787 )
 rotation = 1.5708
 scale = Vector2( 1, 3 )
 
-[node name="WALL61" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL61" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1952, 572 )
 rotation = 1.5708
 scale = Vector2( 1, 4 )
 
-[node name="WALL69" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL69" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2342, 339 )
 rotation = 1.5708
 scale = Vector2( 1, 6.8 )
 
-[node name="WALL79" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL79" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2417, 251 )
 rotation = 1.5708
 scale = Vector2( 1, 6.5 )
 
-[node name="WALL46" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL46" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1078.13, 643 )
 rotation = 1.5708
 scale = Vector2( 1, 2.5 )
 
-[node name="WALL8" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL8" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 539, -368 )
 
-[node name="WALL84" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL84" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 253, -264 )
 scale = Vector2( 1, 2 )
 
-[node name="WALL85" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL85" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 390, -413 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL56" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL56" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1354.13, 449 )
 rotation = 1.5708
 scale = Vector2( 1, 3.5 )
 
-[node name="WALL42" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL42" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1314.13, 572 )
 rotation = 1.5708
 scale = Vector2( 1, 3 )
 
-[node name="WALL53" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL53" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 611.131, 569 )
 rotation = 1.5708
 scale = Vector2( 1, 6 )
 
-[node name="WALL54" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL54" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 412.131, 644 )
 rotation = 1.5708
 scale = Vector2( 1, 6 )
 
-[node name="WALL24" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL24" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1952.13, 442 )
 rotation = 1.5708
 scale = Vector2( 1, 4 )
 
-[node name="WALL30" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL30" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1513, -97 )
 rotation = 1.5708
 scale = Vector2( 1, 0.2 )
 
-[node name="RGlass" parent="Techincal/Enviroment" instance=ExtResource( 16 )]
+[node name="RGlass" parent="Enviroment" instance=ExtResource( 16 )]
 position = Vector2( 1508, 122 )
 
-[node name="RGlass2" parent="Techincal/Enviroment" instance=ExtResource( 16 )]
+[node name="RGlass2" parent="Enviroment" instance=ExtResource( 16 )]
 position = Vector2( 1507, 268 )
 
-[node name="RGlass3" parent="Techincal/Enviroment" instance=ExtResource( 16 )]
+[node name="RGlass3" parent="Enviroment" instance=ExtResource( 16 )]
 position = Vector2( 1579, 343 )
 rotation = 1.5708
 
-[node name="RGlass4" parent="Techincal/Enviroment" instance=ExtResource( 16 )]
+[node name="RGlass4" parent="Enviroment" instance=ExtResource( 16 )]
 position = Vector2( 1710, 343 )
 rotation = 1.5708
 
-[node name="WALL102" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL102" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1625, -93 )
 rotation = 1.5708
 scale = Vector2( 1, 0.2 )
 
-[node name="WALL103" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL103" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1394, -92 )
 rotation = 1.5708
 scale = Vector2( 1, 0.2 )
 
-[node name="WALL15" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL15" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1523.13, -235 )
 rotation = 1.5708
 scale = Vector2( 1, 4 )
 
-[node name="WALL16" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL16" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1572.13, -323 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL17" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL17" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1574.13, -448 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL22" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL22" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2460, -538 )
 rotation = 1.5708
 
-[node name="WALL28" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL28" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1602, -155 )
 
-[node name="WALL29" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL29" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1489, -156 )
 
-[node name="WALL104" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL104" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1449, 48 )
 rotation = 1.5708
 
-[node name="WALL107" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL107" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1449, 196 )
 rotation = 1.5708
 
-[node name="WALL108" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL108" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1449, 342 )
 rotation = 1.5708
 
-[node name="WALL18" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL18" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1579.13, -584 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL32" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL32" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1581.13, -742 )
 rotation = 1.5708
 scale = Vector2( 1, 2.5 )
 
-[node name="WALL33" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL33" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1589.13, -861 )
 rotation = 1.5708
 scale = Vector2( 1, 10 )
 
-[node name="WALL36" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL36" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2006, -638 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL98" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL98" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2391, -746 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL101" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL101" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2006, -741 )
 rotation = 1.5708
 scale = Vector2( 1, 2 )
 
-[node name="WALL95" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL95" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2162, -544 )
 rotation = 1.5708
 scale = Vector2( 1, 1.5 )
 
-[node name="WALL37" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL37" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 2198.13, -289 )
 rotation = 1.5708
 scale = Vector2( 1, 4.75 )
 
-[node name="WALL" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 596.131, 49 )
 rotation = 1.5708
 scale = Vector2( 1, 9 )
 
-[node name="WALL55" parent="Techincal/Enviroment" instance=ExtResource( 4 )]
+[node name="WALL55" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 661.131, 290 )
 rotation = 1.5708
 scale = Vector2( 1, 10 )
 
-[node name="TextureRect" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = -4.0
 margin_top = -117.0
@@ -880,7 +803,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect3" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect3" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = 874.0
 margin_top = -16.0
@@ -894,7 +817,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect7" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect7" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = 1803.0
 margin_top = 583.0
@@ -908,7 +831,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect9" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect9" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = 1768.0
 margin_top = -259.0
@@ -922,7 +845,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect8" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect8" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = 2762.0
 margin_top = 352.0
@@ -936,7 +859,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect4" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect4" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = 825.0
 margin_top = -16.0
@@ -950,7 +873,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect5" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect5" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = 1121.0
 margin_top = -14.0
@@ -964,7 +887,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect6" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect6" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = 1122.0
 margin_top = -19.0
@@ -980,7 +903,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TextureRect2" type="TextureRect" parent="Techincal/Enviroment"]
+[node name="TextureRect2" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
 margin_left = 1533.0
 margin_top = 97.0
@@ -994,145 +917,145 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="lamp" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 223, -123 )
 rotation = 3.14159
 
-[node name="lamp8" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp8" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 1638, 1133 )
 rotation = 3.14159
 
-[node name="lamp6" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp6" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 2846, 261 )
 rotation = 3.14159
 
-[node name="lamp9" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp9" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 2034, 145 )
 rotation = 3.14159
 
-[node name="lamp7" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp7" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 2399, 651 )
 rotation = 1.5708
 
-[node name="lamp2" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp2" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 1420.13, -732 )
 rotation = 3.14159
 
-[node name="lamp3" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp3" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 2181, -534 )
 rotation = 3.14159
 
-[node name="lamp5" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp5" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 1405, 582 )
 rotation = 3.14159
 
-[node name="lamp4" parent="Techincal/Enviroment" instance=ExtResource( 10 )]
+[node name="lamp4" parent="Enviroment" instance=ExtResource( 10 )]
 position = Vector2( 1750, -225 )
 rotation = 3.14159
 
-[node name="Glass" parent="Techincal/Enviroment" instance=ExtResource( 11 )]
+[node name="Glass" parent="Enviroment" instance=ExtResource( 11 )]
 position = Vector2( 1157, -690 )
 scale = Vector2( 1, 0.5 )
 
-[node name="Glass2" parent="Techincal/Enviroment" instance=ExtResource( 11 )]
+[node name="Glass2" parent="Enviroment" instance=ExtResource( 11 )]
 position = Vector2( 1573, -277 )
 scale = Vector2( 1, 0.7 )
 
-[node name="Glass4" parent="Techincal/Enviroment" instance=ExtResource( 11 )]
+[node name="Glass4" parent="Enviroment" instance=ExtResource( 11 )]
 position = Vector2( 1590, 601 )
 scale = Vector2( 1, 0.7 )
 
-[node name="Glass6" parent="Techincal/Enviroment" instance=ExtResource( 11 )]
+[node name="Glass6" parent="Enviroment" instance=ExtResource( 11 )]
 position = Vector2( 1645, 831 )
 scale = Vector2( 1, 0.7 )
 
-[node name="Glass5" parent="Techincal/Enviroment" instance=ExtResource( 11 )]
+[node name="Glass5" parent="Enviroment" instance=ExtResource( 11 )]
 position = Vector2( 1682, 601 )
 scale = Vector2( 1, 0.7 )
 
-[node name="Glass3" parent="Techincal/Enviroment" instance=ExtResource( 11 )]
+[node name="Glass3" parent="Enviroment" instance=ExtResource( 11 )]
 position = Vector2( 2066, -356 )
 scale = Vector2( 1, 0.8 )
 
-[node name="DOOR" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 1778, -235 )
 rotation = 1.5708
 ID = 2
 
-[node name="DOOR3" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR3" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 1156, -66 )
 rotation = 1.5708
 ID = 1
 
-[node name="DOOR2" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR2" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 1779, -107 )
 rotation = 1.5708
 InitialOpen = true
 ID = 2
 
-[node name="DOOR4" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR4" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 2801, 340 )
 rotation = 1.5708
 ID = 3
 
-[node name="DOOR7" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR7" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 2806, 905 )
 rotation = 1.5708
 ID = 3
 
-[node name="DOOR8" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR8" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 2266, 509 )
 rotation = 1.5708
 ID = 3
 
-[node name="DOOR9" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR9" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 2479, 504 )
 rotation = 1.5708
 ID = 3
 
-[node name="DOOR5" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR5" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 1935, 787 )
 rotation = 1.5708
 ID = 3
 
-[node name="DOOR6" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR6" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 2544, 401 )
 ID = 3
 
-[node name="DOOR11" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR11" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 1888, 1065 )
 ID = 3
 
-[node name="DOOR12" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR12" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 1497, 1069 )
 ID = 3
 
-[node name="DOOR10" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR10" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 822, 649 )
 ID = 3
 
-[node name="DOOR13" parent="Techincal/Enviroment" instance=ExtResource( 14 )]
+[node name="DOOR13" parent="Enviroment" instance=ExtResource( 14 )]
 position = Vector2( 1367, 641 )
 ID = 3
 
-[node name="Node2D2" parent="Techincal/Enviroment" instance=ExtResource( 15 )]
+[node name="Node2D2" parent="Enviroment" instance=ExtResource( 15 )]
 position = Vector2( 1226, -8 )
 DoorID = 1
 
-[node name="Node2D9" parent="Techincal/Enviroment" instance=ExtResource( 15 )]
+[node name="Node2D9" parent="Enviroment" instance=ExtResource( 15 )]
 position = Vector2( 1848, -172 )
 DoorID = 2
 
-[node name="Node2D15" parent="Techincal/Enviroment" instance=ExtResource( 15 )]
+[node name="Node2D15" parent="Enviroment" instance=ExtResource( 15 )]
 position = Vector2( 1699, 1236 )
 rotation = 1.5708
 DoorID = 3
 
-[node name="Node2D10" parent="Techincal/Enviroment" instance=ExtResource( 15 )]
+[node name="Node2D10" parent="Enviroment" instance=ExtResource( 15 )]
 position = Vector2( 2267, -431 )
 DoorID = 2
 
-[node name="ColorRect2" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect2" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1866.0
 margin_top = -444.0
@@ -1143,7 +1066,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1846.0
 margin_top = -443.0
@@ -1154,7 +1077,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect11" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect11" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1224.0
 margin_top = -58.0
@@ -1165,7 +1088,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect6" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect6" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 2869.0
 margin_top = 332.0
@@ -1176,7 +1099,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect7" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect7" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1727.0
 margin_top = 895.0
@@ -1187,7 +1110,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect13" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect13" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1375.0
 margin_top = 582.0
@@ -1198,7 +1121,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect8" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect8" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1727.0
 margin_top = 895.0
@@ -1209,7 +1132,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect12" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect12" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 2146.0
 margin_top = 556.0
@@ -1220,7 +1143,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect9" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect9" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1697.0
 margin_top = 1234.0
@@ -1231,7 +1154,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect4" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect4" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1866.0
 margin_top = -300.0
@@ -1242,7 +1165,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect10" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect10" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1866.0
 margin_top = -300.0
@@ -1253,7 +1176,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect5" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect5" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 2265.0
 margin_top = -430.0
@@ -1264,7 +1187,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect3" type="ColorRect" parent="Techincal/Enviroment"]
+[node name="ColorRect3" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
 margin_left = 1846.0
 margin_top = -444.0
@@ -1274,3 +1197,165 @@ color = Color( 1, 0, 0, 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="Ammo" type="Node" parent="."]
+
+[node name="Node2D" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( -49, -688 )
+
+[node name="Node2D4" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 1681, 263 )
+
+[node name="Node2D3" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 1590, 257 )
+
+[node name="Node2D5" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 991.131, 684 )
+
+[node name="Node2D11" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 478, 611 )
+
+[node name="Node2D7" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 1326.13, 386 )
+
+[node name="Node2D8" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 2841.13, 1121 )
+
+[node name="Node2D6" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 1276.13, 519 )
+
+[node name="Node2D13" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 1688, 1143 )
+
+[node name="Node2D14" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 2422, 1078 )
+
+[node name="Node2D16" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 2127, 1157 )
+
+[node name="Node2D17" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 2334, 956 )
+
+[node name="Node2D12" parent="Ammo" instance=ExtResource( 5 )]
+position = Vector2( 2503, 727 )
+
+[node name="Navigation" type="Node" parent="."]
+script = SubResource( 6 )
+
+[node name="NavPoint" parent="Navigation" instance=ExtResource( 6 )]
+
+[node name="NavPoint2" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 218, 11 )
+
+[node name="NavPoint3" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 459, 11 )
+
+[node name="NavPoint4" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 456, -155 )
+
+[node name="NavPoint5" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 363, -9 )
+
+[node name="NavPoint6" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 357, -179 )
+
+[node name="NavPoint7" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 308, -308 )
+
+[node name="NavPoint8" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 485, -304 )
+
+[node name="NavPoint9" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 584, -265 )
+
+[node name="NavPoint10" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 585, -11 )
+
+[node name="NavPoint11" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 772, 12 )
+
+[node name="NavPoint12" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 773, -683 )
+
+[node name="NavPoint13" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1191, 4 )
+
+[node name="NavPoint14" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1205, -678 )
+
+[node name="NavPoint15" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1368, -681 )
+
+[node name="NavPoint16" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1417, -804 )
+
+[node name="NavPoint17" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1786, -784 )
+
+[node name="NavPoint18" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1332, -805 )
+
+[node name="NavPoint19" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1297, -309 )
+
+[node name="NavPoint20" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1374, -285 )
+
+[node name="NavPoint21" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1485, -368 )
+
+[node name="NavPoint22" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1669, -358 )
+
+[node name="NavPoint23" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1395, -368 )
+
+[node name="NavPoint24" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1405, -519 )
+
+[node name="NavPoint25" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1575, -554 )
+
+[node name="NavPoint26" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1769, -506 )
+
+[node name="NavPoint27" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1905, -489 )
+
+[node name="NavPoint28" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1975, -586 )
+
+[node name="NavPoint29" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 1968, -350 )
+
+[node name="NavPoint30" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2200, -594 )
+
+[node name="NavPoint31" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2192, -803 )
+
+[node name="NavPoint32" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2220, -696 )
+
+[node name="NavPoint33" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2348, -704 )
+
+[node name="NavPoint34" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2361, -531 )
+
+[node name="NavPoint35" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2489, -437 )
+
+[node name="NavPoint36" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2468, -336 )
+rotation = 2.69991
+
+[node name="NavPoint37" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2244, -346 )
+rotation = 2.69991
+
+[node name="NavPoint38" parent="Navigation" instance=ExtResource( 6 )]
+position = Vector2( 2145, -429 )
+rotation = 2.69991
+
+[editable path="Navigation/NavPoint"]
