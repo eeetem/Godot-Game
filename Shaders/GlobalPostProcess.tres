@@ -23,12 +23,13 @@ void fragment(){
 //	COLOR.a += offset/5f;
 
 
-	float t = TIME*100f; // tweak the start moment
+	float t = float(int(TIME*100f)%800); // tweak the start moment
 	float ta = t*.654321;
 	float tb = t*(ta*.12456);
 	float c = Noise21(UV, ta, tb);
 	
-	COLOR.a += c/5f;
+	COLOR.a += 0.1f+c/5f;
+	
 	//reden
 	COLOR.r += 0.0001f;
 	COLOR.r *= 1f+ (healthmag/300f);

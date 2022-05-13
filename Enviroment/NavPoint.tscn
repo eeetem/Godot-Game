@@ -12,7 +12,7 @@ func _ready():
 	var space_state = get_world_2d().direct_space_state
 	for navpoint in get_tree().get_nodes_in_group(\"NavPoints\"):
 		if navpoint != self:
-			var result = space_state.intersect_ray(self.position, navpoint.position,[],5);
+			var result = space_state.intersect_ray(self.position, navpoint.position,[],17);
 			if !result:
 				ConnectedNavPoints.append(navpoint);
 	yield(get_tree(), \"idle_frame\")

@@ -2,12 +2,12 @@
 
 importer="wav"
 type="AudioStreamSample"
-path="res://.import/reload.wav-23d6e0131e63b6a68e49f5ee9438062c.sample"
+path="res://.import/pump.wav-80a9232f75782b86307ae27518cc8b34.sample"
 
 [deps]
 
-source_file="res://Sounds/reload.wav"
-dest_files=[ "res://.import/reload.wav-23d6e0131e63b6a68e49f5ee9438062c.sample" ]
+source_file="res://Player/pump.wav"
+dest_files=[ "res://.import/pump.wav-80a9232f75782b86307ae27518cc8b34.sample" ]
 
 [params]
 

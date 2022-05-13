@@ -38,7 +38,8 @@ func _physics_process(delta):
 		return
 	var space_state = get_world_2d().direct_space_state
 	# use global coordinates, not local to node
-	var result = space_state.intersect_ray(self.position, Player.position,[],5)
+	#turn this into a collider later
+	var result = space_state.intersect_ray(self.position, Player.position,[],37)
 	if result and result.collider.name == \"Player\" and (result.collider.position.distance_to(self.position) < 260):
 		Player.Lit = true;
 		Player.LastLit = true;

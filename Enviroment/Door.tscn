@@ -53,6 +53,7 @@ func SetOpen(open):
 "
 
 [node name="DOOR" instance=ExtResource( 1 )]
+collision_layer = 32
 script = SubResource( 1 )
 
 [node name="ColorRect" type="ColorRect" parent="." index="2"]

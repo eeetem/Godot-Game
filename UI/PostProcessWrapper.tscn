@@ -60,10 +60,12 @@ script/source = "extends Node
 # var a = 2
 # var b = \"text\"
 var oldAmmo;
+var oldKits;
 var UIItems = []
 var c : Curve = preload(\"res://HealthRedCurve.tres\");
 
 var uiBullet = preload(\"res://UI/UIShell.tscn\")
+var uiMed = preload(\"res://UI/UIMed.tscn\")
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -75,17 +77,25 @@ func _process(delta):
 	if	!is_instance_valid(Player):
 		return
 	get_child(0).material.set_shader_param(\"healthmag\",c.interpolate(1 - Player.health/100.0))
-	if oldAmmo == Player.looseAmmo:
+	if oldAmmo == Player.looseAmmo and oldKits == Player.medKits:
 		return
 	oldAmmo = Player.looseAmmo;
+	oldKits = Player.medKits;
 	for uitem in UIItems:
 		uitem.queue_free();
 		
 	UIItems.clear();
+	var i =0;
 	for n in Player.looseAmmo:
+		i+=1;
 		var instance : Control = uiBullet.instance();
 		get_node(\"Bar\").add_child(instance);
 		instance.rect_position = Vector2(n*50+50,1000)
+		UIItems.append(instance);
+	for n in Player.medKits:
+		var instance : Control = uiMed.instance();
+		get_node(\"Bar\").add_child(instance);
+		instance.rect_position = Vector2((n+i)*50+50,1000)
 		UIItems.append(instance);
 "
 

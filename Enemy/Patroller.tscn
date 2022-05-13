@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Player/fashlight.png" type="Texture" id=1]
+[ext_resource path="res://Enemy/Enemy.tscn" type="PackedScene" id=2]
+
+[node name="Patroller" instance=ExtResource( 2 )]
+patroller = true
+agroMode = 2
+forceMultiplier = 0.8
+
+[node name="CollisionPolygon2D2" type="CollisionPolygon2D" parent="Area2D" index="2"]
+position = Vector2( -4.34797, 0 )
+rotation = 3.14159
+scale = Vector2( 19.3345, 71.0938 )
+polygon = PoolVector2Array( 0, 0, 10, -1, 10, 1 )
+
+[node name="Flashlight2" type="Light2D" parent="." index="7"]
+position = Vector2( 0, -1.42109e-14 )
+rotation = 3.14159
+scale = Vector2( 0.984503, 1.28665 )
+texture = ExtResource( 1 )
+offset = Vector2( 100, 0 )
+texture_scale = 0.2
+energy = 1.5
+shadow_enabled = true
+shadow_item_cull_mask = 31

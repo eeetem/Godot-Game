@@ -17,24 +17,45 @@ var blood = preload(\"res://Enemy/Blood.tscn\")
 var c : Curve = preload(\"res://enemyLightCurve.tres\");
 
 var PlayerPos : Vector2;
+var PlayerVel : Vector2;
 var playerInCone = false;
 var playerVisible = false;
 
 var light :Light2D;
 var tinylight :Light2D;
 var noise :AudioStreamPlayer2D;
-var rotationSpeed =7;
+var rotationSpeed =6;
 
 var stun :float = 0;
 
+export var patroller = false
+
+export var agroMode = 0;
+#2 - direct sight of player
+#1 - looking for player
+#0 - unaware of player
+onready var navigation = get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World/Navigation\");
+
 onready var rotationTarget =  self.position + Vector2(1,0).rotated(self.rotation);
 
+var lookArounCounter = -1;
+var lookOffset;
+
+export var forceMultiplier = 1.0
+
+
+var line;
 func _ready():
 	PlayerPos = self.position;
 	light = get_node(\"Light2D\");
 	noise = get_node(\"noise\");
+	#line = Line2D.new()
+	yield(get_tree(), \"idle_frame\")
+#	get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(line)
 
 
+
+var LastPos = Vector2(0,0)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
@@ -53,30 +74,36 @@ func GetHit():
 func _physics_process(delta):
 	if (!is_instance_valid(Player) or Player.dead):return;
 
-
 	if stun > 0 :
 		stun -= delta;
 		return;
-		
-	var space_state = get_world_2d().direct_space_state
-	# use global coordinates, not local to node
-	var result = space_state.intersect_ray(self.position, Player.position,[],5);
-	if result and result.collider.name == \"Player\" and (playerInCone or Player.FlashOn or Player.GunLight.energy>0.1 or Player.Lit):
-		PlayerPos = result.collider.position ;
-		playerVisible = true;
+	if(agroMode != 0 and LastPos.distance_to(position) < 10*delta):#antistuck
+		PlayerPos = navigation.GetClosestNavNode(position).position;
+	
+	LastPos = position
+	playerVisible = false;
+	if (playerInCone or Player.FlashOn or Player.GunLight.energy>0.1 or Player.Lit):
+		var space_state = get_world_2d().direct_space_state
+		# use global coordinates, not local to node
+		var result = space_state.intersect_ray(self.position, Player.position,[],37);
+		if result and result.collider.name == \"Player\":
+			PlayerPos = result.collider.position ;
+			PlayerVel = result.collider.Velocity;
+			agroMode = 2;
+			light.energy = c.interpolate((300 - Player.position.distance_to(self.position))/300);
+			noise.pitch_scale = clamp((300 - Player.position.distance_to(self.position))/250,1,5);
+			#looking
+			rotationTarget = PlayerPos;
+			playerVisible = true
+			rotationSpeed = 6;
 
-	if(playerVisible):
-		#light and noise
-		light.energy = c.interpolate((300 - Player.position.distance_to(self.position))/300);
-		noise.pitch_scale = clamp((300 - Player.position.distance_to(self.position))/250,1,5);
-		#looking
-		rotationTarget = PlayerPos;
-		
-		
-		
-	else:
+	if(!playerVisible):
 		light.energy = clamp((light.energy-0.5*delta),0,1);
-		rotationTarget = linear_velocity + Vector2(rand_range(-5,5),rand_range(-5,5));
+		lookArounCounter -= delta;
+		if lookArounCounter < 0:
+			lookArounCounter = 1;
+			lookOffset =  Vector2(rand_range(100,-100),rand_range(-100,100));
+		rotationTarget = position + linear_velocity + lookOffset;
 	
 	
  #tinylight.energy = clamp(lerp(0,1.5,(400 - Player.position.distance_to(self.position))/400),0,1)
@@ -92,10 +119,21 @@ func _physics_process(delta):
 	#	else:
 	#		velocity += (Vector2(0,0) - velocity).normalized();
 			
-	#move_and_slide(velocity); 
+	#move_and_slide(velocity);
 	
 	
-	if abs(self.get_angle_to(rotationTarget)) > 0.1:
+	if(agroMode == 2 and !playerVisible and PlayerPos.distance_to(self.position) < 50 and linear_velocity.length() < 50):
+		PlayerPos = navigation.GetClosestNavNode(PlayerPos+PlayerVel).position;
+		agroMode = 1;
+	elif (agroMode == 1 and PlayerPos.distance_to(self.position) < 50 and linear_velocity.length() < 40):
+		PlayerPos = navigation.GetRandomNeighbour(navigation.GetClosestNavNode(PlayerPos)).position;
+		rotationSpeed = 5;
+	
+	
+	
+	if(patroller and agroMode==1):
+		self.rotation += delta*rotationSpeed
+	elif abs(self.get_angle_to(rotationTarget)) > 0.1:
 		if self.get_angle_to(rotationTarget) > 0:
 			self.rotation += delta*rotationSpeed
 		else:
@@ -104,11 +142,16 @@ func _physics_process(delta):
 		look_at(rotationTarget)
 	
 	
-	apply_central_impulse((PlayerPos - position).normalized()*3)
-	if Player.position.distance_to(self.position) > 145 and Player.position.distance_to(self.position) < 500:
-		apply_central_impulse((PlayerPos - position).normalized()*Player.position.distance_to(self.position)/60)
-
-
+	#line.clear_points()
+	#line.add_point(position)
+	#line.add_point(PlayerPos);
+	if (agroMode == 2):
+		apply_central_impulse((PlayerPos - position).normalized()*3*forceMultiplier)
+		if Player.position.distance_to(self.position) > 145 and Player.position.distance_to(self.position) < 500:
+			apply_central_impulse((PlayerPos - position).normalized()*forceMultiplier*Player.position.distance_to(self.position)/60)
+	elif (agroMode == 1):
+		apply_central_impulse((PlayerPos - position).normalized()*1.5)
+	
 
 
 func _on_Enemy_body_entered(body):
@@ -149,7 +192,7 @@ radius = 42.0476
 [node name="Enemy" type="RigidBody2D"]
 process_priority = 1
 collision_layer = 2
-collision_mask = 15
+collision_mask = 63
 gravity_scale = 0.0
 contacts_reported = 999
 contact_monitor = true
