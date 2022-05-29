@@ -8,7 +8,7 @@
 [ext_resource path="res://Enviroment/NavPoint.tscn" type="PackedScene" id=6]
 [ext_resource path="res://Enviroment/gfx/r.png" type="Texture" id=7]
 [ext_resource path="res://Enemy/Patroller.tscn" type="PackedScene" id=8]
-[ext_resource path="res://caster.png" type="Texture" id=9]
+[ext_resource path="res://Player/los.png" type="Texture" id=9]
 [ext_resource path="res://Enviroment/Lamp.tscn" type="PackedScene" id=10]
 [ext_resource path="res://Enviroment/Glass.tscn" type="PackedScene" id=11]
 [ext_resource path="res://Enviroment/gfx/f.png" type="Texture" id=12]
@@ -41,17 +41,29 @@ script/source = "extends Node2D
 
 var searching = false;
 
-#signal signal 
+signal Finished(id);
+
+var idCounter = 0;
+ 
 var ignored = []
+
+##rewrite this later in c#
 func StartFindPathBetween(n1,n2):
-	ignored = []
-	return FindPathBetween([n1,n2])
-	#return [n1.position,n2.position]
+	var id = idCounter;
+	idCounter+=1;
+	
+	var thread = Thread.new()
+	thread.start(self,'FindPathBetween',[n1,n2,id])
+
+	var result = thread.wait_to_finish()
+	return result;
+	
 
 func FindPathBetween(args):
 	ignored.append(self)
 	var n1 = args[0]
 	var n2 = args[1]
+	var id = args[2]
 	print(\"looking from: \"+n1.name)
 	for node in n1.ConnectedNavPoints:
 		if(node == n2):
@@ -65,11 +77,12 @@ func FindPathBetween(args):
 		ignored.append(node)
 		var thread = Thread.new()
 		threads.append(thread);
-		thread.start(self,'FindPathBetween',[node,n2])
+		thread.start(self,'FindPathBetween',[node,n2,-1])
 	
 	var ShortestPath = null
 	for thread in threads:
 		var path = thread.wait_to_finish();
+		
 		if path == null:
 			continue
 		print(\"proposed path found: \"+str(path))
@@ -78,18 +91,19 @@ func FindPathBetween(args):
 			newShortestPath += path
 			ShortestPath=newShortestPath;
 	print(\"A path found: \"+str(ShortestPath))
+	if(id != -1):
+		emit_signal(\"Finished\", id)
 	return ShortestPath;
+	
 
 func GetClosestNavNode(pos):
 	var closest = null;
 	var space_state = get_world_2d().direct_space_state
 	for node in get_tree().get_nodes_in_group(\"NavPoints\"):
-		if closest == null:
-			closest = node;
-			continue;
-		var result = space_state.intersect_ray(node.position, pos,[],17);
-		if !result and pos.distance_to(node.position) < pos.distance_to(closest.position):
-			closest = node;
+		if closest == null or pos.distance_to(node.position) < pos.distance_to(closest.position):
+			var result = space_state.intersect_ray(node.position, pos,[],17);
+			if !result:
+				closest = node;
 			
 	return closest
 		
@@ -122,6 +136,7 @@ __meta__ = {
 color = Color( 0, 0, 0, 1 )
 
 [node name="LosBlocker" type="Sprite" parent="Techincal"]
+modulate = Color( 0, 0, 0, 1 )
 light_mask = 2
 position = Vector2( 621, 160 )
 scale = Vector2( 1394.65, 353.575 )
@@ -224,9 +239,6 @@ position = Vector2( 1106, 729 )
 
 [node name="Patroller4" parent="Enemies" instance=ExtResource( 8 )]
 position = Vector2( 2372, -146 )
-
-[node name="Patroller5" parent="Enemies" instance=ExtResource( 8 )]
-position = Vector2( 2599, 48 )
 
 [node name="Enemy13" parent="Enemies" instance=ExtResource( 3 )]
 position = Vector2( 1923.13, 288 )
@@ -338,7 +350,7 @@ rotation = -0.785398
 scale = Vector2( 1, 0.5 )
 
 [node name="WALL83" parent="Enviroment" instance=ExtResource( 4 )]
-position = Vector2( 284, -134 )
+position = Vector2( 306, -160 )
 scale = Vector2( 2, 1 )
 
 [node name="WALL138" parent="Enviroment" instance=ExtResource( 4 )]
@@ -415,7 +427,7 @@ position = Vector2( 453, -251 )
 rotation = 2.0944
 
 [node name="WALL25" parent="Enviroment" instance=ExtResource( 4 )]
-position = Vector2( -43, -42 )
+position = Vector2( -41, -33 )
 scale = Vector2( 1, 2 )
 
 [node name="WALL40" parent="Enviroment" instance=ExtResource( 4 )]
@@ -737,6 +749,11 @@ position = Vector2( 1523.13, -235 )
 rotation = 1.5708
 scale = Vector2( 1, 4 )
 
+[node name="WALL23" parent="Enviroment" instance=ExtResource( 4 )]
+position = Vector2( 1516, -107 )
+rotation = 1.5708
+scale = Vector2( 1, 2 )
+
 [node name="WALL16" parent="Enviroment" instance=ExtResource( 4 )]
 position = Vector2( 1572.13, -323 )
 rotation = 1.5708
@@ -972,10 +989,10 @@ __meta__ = {
 
 [node name="TextureRect10" type="TextureRect" parent="Enviroment"]
 material = SubResource( 5 )
-margin_left = 1449.0
-margin_top = -122.0
-margin_right = 1538.0
-margin_bottom = -63.0
+margin_left = 1528.0
+margin_top = -88.0
+margin_right = 1617.0
+margin_bottom = -29.0
 rect_pivot_offset = Vector2( 29, 36 )
 texture = ExtResource( 18 )
 expand = true
@@ -1053,7 +1070,7 @@ position = Vector2( 1420.13, -732 )
 rotation = 3.14159
 
 [node name="lamp10" parent="Enviroment" instance=ExtResource( 10 )]
-position = Vector2( 1449, -225 )
+position = Vector2( 1507, -97 )
 rotation = 3.14159
 
 [node name="lamp3" parent="Enviroment" instance=ExtResource( 10 )]
@@ -1182,10 +1199,10 @@ DoorID = 2
 
 [node name="ColorRect2" type="ColorRect" parent="Enviroment"]
 material = SubResource( 4 )
-margin_left = 1866.0
+margin_left = 1863.0
 margin_top = -444.0
 margin_right = 1869.0
-margin_bottom = -175.0
+margin_bottom = -299.0
 color = Color( 1, 0, 0, 1 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -1328,6 +1345,9 @@ __meta__ = {
 [node name="Node2D" parent="Pickups" instance=ExtResource( 5 )]
 position = Vector2( -49, -688 )
 
+[node name="Node2D2" parent="Pickups" instance=ExtResource( 5 )]
+position = Vector2( 1404, -206 )
+
 [node name="Node2D4" parent="Pickups" instance=ExtResource( 5 )]
 position = Vector2( 1681, 263 )
 
@@ -1366,6 +1386,9 @@ position = Vector2( 2503, 727 )
 
 [node name="medkit" parent="Pickups" instance=ExtResource( 19 )]
 position = Vector2( 1484, -25 )
+
+[node name="medkit6" parent="Pickups" instance=ExtResource( 19 )]
+position = Vector2( 1425, -154 )
 
 [node name="medkit2" parent="Pickups" instance=ExtResource( 19 )]
 position = Vector2( 2511, 1074 )
@@ -1583,10 +1606,6 @@ rotation = 2.69991
 
 [node name="NavPoint69" parent="Navigation" instance=ExtResource( 6 )]
 position = Vector2( 2554, 97.9999 )
-rotation = 2.69991
-
-[node name="NavPoint70" parent="Navigation" instance=ExtResource( 6 )]
-position = Vector2( 2309, 90.9999 )
 rotation = 2.69991
 
 [node name="NavPoint67" parent="Navigation" instance=ExtResource( 6 )]

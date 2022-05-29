@@ -51,8 +51,7 @@ func _ready():
 	noise = get_node(\"noise\");
 	#line = Line2D.new()
 	yield(get_tree(), \"idle_frame\")
-#	get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(line)
-
+	#get_tree().get_root().get_node(\"Control/ViewportContainer/Viewport/World\").add_child(line)
 
 
 var LastPos = Vector2(0,0)
@@ -77,12 +76,14 @@ func _physics_process(delta):
 	if stun > 0 :
 		stun -= delta;
 		return;
-	if(agroMode != 0 and LastPos.distance_to(position) < 10*delta):#antistuck
-		PlayerPos = navigation.GetClosestNavNode(position).position;
+	if(agroMode != 0 and LastPos.distance_to(position) < delta):#antistuck
+		var NextNode = navigation.GetClosestNavNode(position);
+		if(NextNode !=null):
+			PlayerPos = NextNode.position;
 	
 	LastPos = position
 	playerVisible = false;
-	if (playerInCone or Player.FlashOn or Player.GunLight.energy>0.1 or Player.Lit):
+	if (playerInCone or Player.FlashOn or Player.GunLight.energy>0.1 or Player.Lit) and Player.position.distance_to(position) < 1500:
 		var space_state = get_world_2d().direct_space_state
 		# use global coordinates, not local to node
 		var result = space_state.intersect_ray(self.position, Player.position,[],37);
@@ -102,8 +103,8 @@ func _physics_process(delta):
 		lookArounCounter -= delta;
 		if lookArounCounter < 0:
 			lookArounCounter = 1;
-			lookOffset =  Vector2(rand_range(100,-100),rand_range(-100,100));
-		rotationTarget = position + linear_velocity + lookOffset;
+			lookOffset =  Vector2(rand_range(-50,50),rand_range(-50,50));
+			rotationTarget = position + linear_velocity + lookOffset;
 	
 	
  #tinylight.energy = clamp(lerp(0,1.5,(400 - Player.position.distance_to(self.position))/400),0,1)
@@ -122,11 +123,19 @@ func _physics_process(delta):
 	#move_and_slide(velocity);
 	
 	
-	if(agroMode == 2 and !playerVisible and PlayerPos.distance_to(self.position) < 50 and linear_velocity.length() < 50):
-		PlayerPos = navigation.GetClosestNavNode(PlayerPos+PlayerVel).position;
+	if(agroMode == 2 and !playerVisible and PlayerPos.distance_to(self.position) < 25 and linear_velocity.length() < 50):
+		var node = navigation.GetClosestNavNode(PlayerPos+PlayerVel);
+		if(node !=null):
+			PlayerPos = node.position;
 		agroMode = 1;
-	elif (agroMode == 1 and PlayerPos.distance_to(self.position) < 50 and linear_velocity.length() < 40):
-		PlayerPos = navigation.GetRandomNeighbour(navigation.GetClosestNavNode(PlayerPos)).position;
+	elif (agroMode == 1 and PlayerPos.distance_to(self.position) < 25 and linear_velocity.length() < 40):
+		if ActivePath.size() > 0:
+			PlayerPos = ActivePath[0]
+			ActivePath.pop_front();
+		else:
+			var node = navigation.GetClosestNavNode(PlayerPos);
+			if node != null:
+				PlayerPos = navigation.GetRandomNeighbour(node).position;
 		rotationSpeed = 5;
 	
 	
@@ -142,9 +151,9 @@ func _physics_process(delta):
 		look_at(rotationTarget)
 	
 	
-	#line.clear_points()
+#	line.clear_points()
 	#line.add_point(position)
-	#line.add_point(PlayerPos);
+#	line.add_point(PlayerPos);
 	if (agroMode == 2):
 		apply_central_impulse((PlayerPos - position).normalized()*3*forceMultiplier)
 		if Player.position.distance_to(self.position) > 145 and Player.position.distance_to(self.position) < 500:
@@ -164,11 +173,30 @@ func _on_Enemy_body_entered(body):
 	if \"reinforced\" in body and !body.reinforced:#shitcode, fix this later
 		body.GetHit();
 		stun = 5;
+		
+var ActivePath = []
+func PathTowrads(pos):
+	rotationTarget = pos;
+	var start = self.position;
+	var end = pos;
+	var endNode = navigation.GetClosestNavNode(end)
+	var startNode = navigation.GetClosestNavNode(start)
+	var path = navigation.StartFindPathBetween(startNode,endNode);
+	if path is GDScriptFunctionState: # Still working.
+		path = yield(path, \"completed\")
+	if(path != null):
+		path.push_back(end)
+		ActivePath = path;
 
+func Alerted(pos):
+	if(agroMode != 2):
+		PathTowrads(pos)
+		agroMode = 1;
 
 func _on_Area2D_body_entered(body):
 	if(body.name == \"Player\"):
 		playerInCone = true;
+	pass
 
 
 func _on_Area2D_body_exited(body):

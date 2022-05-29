@@ -34,6 +34,8 @@ var shot = preload(\"res://Player/gun.wav\")
 var heal = preload(\"res://Player/duct_tape.ogg\")
 var reload = preload(\"res://Player/reload.wav\")
 var pump = preload(\"res://Player/pump.wav\")
+var steps = [preload(\"res://Player/step (1).wav\"),preload(\"res://Player/step (2).wav\"),preload(\"res://Player/step (3).wav\"),preload(\"res://Player/step (4).wav\")]
+
 
 
 var bullet = preload(\"res://Player/Bullet.tscn\")
@@ -68,6 +70,7 @@ func ResetAndRespawn():
 	looseAmmo = 0;
 	medKits = 0;
 	position = Vector2(0,-0);
+	
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -82,11 +85,19 @@ func _physics_process(delta):
 
 var stun = 0;
 
+
+var stepDistance =0;
+var LastPos= Vector2(0,0);
 func ProcessMovement(delta) -> void:
 	if dead : return;
 	if stun > 0 :
 		stun -= delta;
 		return;
+	stepDistance += LastPos.distance_to(position);
+	if(stepDistance >50):
+		Globals.PlaySound(steps[int(rand_range(0,4))],position,lerp(-50,600,Velocity.length()/200));
+		stepDistance = 0;
+	LastPos = position
 	var dir := Vector2.ZERO # The player's movement vector.dwssssssssssssssssssssssssssadwasd
 	if Input.is_action_pressed(\"ui_right\"):
 		dir.x += 1
@@ -113,6 +124,7 @@ func ProcessMovement(delta) -> void:
 
 
 	var rotationSpeed =6;
+	var attemptingSlow = false;
 	if Input.is_action_pressed(\"sprint\") or  Velocity.length() > walkSpeed+5:#you can't use walk to insantly slow down
 		acceleration = RunAcc
 		MaxSpeed = RunSpeed;
@@ -123,7 +135,7 @@ func ProcessMovement(delta) -> void:
 		
 	if Input.is_action_pressed(\"sprint\"):
 		rotationTarget = get_global_mouse_position().linear_interpolate(self.position +Velocity,Velocity.length()/(RunSpeed+10));
-		
+
 		
 
 	if abs(self.get_angle_to(rotationTarget)) > 0.1:
@@ -138,7 +150,6 @@ func ProcessMovement(delta) -> void:
 	dir = dir.clamped(1);
 	if dir.length() == 0:
 		Velocity =  Velocity *0.95
-
 	else:
 		Velocity += dir * acceleration
 		lastDir = dir;
@@ -165,9 +176,7 @@ func ProcessWeapon(delta) -> void:
 
 		
 	if Input.is_action_pressed(\"shoot\") and magazine > 0 :
-		SFXplayer.pitch_scale = rand_range(0.9, 1.1);
-		SFXplayer.stream = shot;
-		SFXplayer.play();
+		Globals.PlaySound(shot,position,2000);
 		shotCooldown = 1.5;
 		for n in 6:
 			var instance = bullet.instance();
@@ -265,7 +274,7 @@ shadow_enabled = true
 
 [node name="TinyLight2" type="Light2D" parent="."]
 position = Vector2( 9.89437e-06, -2.28882e-05 )
-scale = Vector2( 0.41748, 0.41748 )
+scale = Vector2( 0.417, 0.417 )
 texture = ExtResource( 3 )
 texture_scale = 0.2
 energy = 0.5
